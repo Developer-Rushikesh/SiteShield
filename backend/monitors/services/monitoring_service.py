@@ -13,7 +13,7 @@ DISALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '::1']
 def is_ip_private(ip_str):
     try:
         ip = ipaddress.ip_address(ip_str)
-        return ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_reserved
+        return ip.is_private or ip.is_loopback or ip.is_link_local
     except ValueError:
         return False
 
@@ -69,7 +69,7 @@ def check_website(monitor: Monitor):
 
     # Step 2: Perform HTTP GET request
     headers = {
-        'User-Agent': '24Monitor-Bot/1.0 (+https://24monitor.local)'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
     
     start_time = time.time()

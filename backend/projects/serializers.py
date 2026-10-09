@@ -3,6 +3,10 @@ from rest_framework import serializers
 from .models import Project
 
 class ProjectSerializer(serializers.ModelSerializer):
+    url = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    check_interval = serializers.IntegerField(write_only=True, required=False, default=5)
+    timeout = serializers.IntegerField(write_only=True, required=False, default=10)
+
     monitors_count = serializers.SerializerMethodField()
     healthy_count = serializers.SerializerMethodField()
     down_count = serializers.SerializerMethodField()
@@ -16,10 +20,69 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = [
             'id', 'name', 'description', 'is_active', 'created_at', 'updated_at',
+            'url', 'check_interval', 'timeout',
             'monitors_count', 'healthy_count', 'down_count', 'status',
             'uptime', 'average_response_time', 'website_url', 'last_checked'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def create(self, validated_data):
+        url = validated_data.pop('url', None)
+        check_interval = validated_data.pop('check_interval', 5)
+        timeout = validated_data.pop('timeout', 10)
+
+        from django.db import transaction
+        with transaction.atomic():
+            project = Project.objects.create(**validated_data)
+            if url:
+                from monitors.models import Monitor
+                from monitors.services.monitoring_service import check_website
+                monitor = Monitor.objects.create(
+                    project=project,
+                    name=f"{project.name} HTTP",
+                    url=url,
+                    check_interval=check_interval,
+                    timeout=timeout
+                )
+                try:
+                    check_website(monitor)
+                except Exception as e:
+                    print("Initial health scan error:", e)
+            return project
+
+    def update(self, instance, validated_data):
+        url = validated_data.pop('url', None)
+        check_interval = validated_data.pop('check_interval', None)
+        timeout = validated_data.pop('timeout', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if url:
+            from monitors.models import Monitor
+            from monitors.services.monitoring_service import check_website
+            monitor = instance.monitors.first()
+            if monitor:
+                monitor.url = url
+                if check_interval is not None:
+                    monitor.check_interval = check_interval
+                if timeout is not None:
+                    monitor.timeout = timeout
+                monitor.save()
+            else:
+                monitor = Monitor.objects.create(
+                    project=instance,
+                    name=f"{instance.name} HTTP",
+                    url=url,
+                    check_interval=check_interval or 5,
+                    timeout=timeout or 10
+                )
+            try:
+                check_website(monitor)
+            except Exception as e:
+                print("Update health scan error:", e)
+        return instance
 
     def get_monitors_count(self, obj):
         return obj.monitors.count()

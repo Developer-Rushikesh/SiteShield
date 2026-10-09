@@ -18,7 +18,11 @@ class MonitorViewSet(viewsets.ModelViewSet):
         project_id = self.request.data.get('project')
         try:
             project = Project.objects.get(id=project_id, user=self.request.user)
-            serializer.save(project=project)
+            monitor = serializer.save(project=project)
+            try:
+                check_website(monitor)
+            except Exception as e:
+                print("Monitor creation initial scan error:", e)
         except Project.DoesNotExist:
             raise serializers.ValidationError({"project": "Project not found or access denied."})
 
