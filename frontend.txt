@@ -1,0 +1,1096 @@
+# FRONTEND DEVELOPMENT PROMPT
+
+## 24/7 Website Monitoring SaaS Dashboard
+
+You are building ONLY the FRONTEND of a professional 24/7 Website Monitoring SaaS application.
+
+Do NOT create the Django backend yet.
+
+The frontend must be completely functional using temporary/mock data so that the entire UI, navigation, dashboard, charts, project management, monitoring pages, history, incidents and notifications can be tested before backend development.
+
+---
+
+# 1. Technology
+
+Use:
+
+* React.js
+* Vite
+* React Router
+* Axios
+* Recharts
+* JavaScript
+* CSS / CSS Modules or a clean styling approach
+
+Do not use Django templates.
+
+Frontend must be completely independent from Django.
+
+---
+
+# 2. Main Goal
+
+Build a professional SaaS dashboard where a user can monitor multiple websites/projects.
+
+The UI should make it extremely easy to understand:
+
+* Which websites are healthy
+* Which websites are down
+* Which websites are slow
+* Website uptime
+* Response time
+* HTTP status
+* Monitoring history
+* Incidents
+* Notifications
+* Alerts
+* Project status
+
+The application should look like a real SaaS product suitable for showing to freelance clients.
+
+Do NOT make it look like a basic college CRUD project.
+
+---
+
+# 3. Design Requirements
+
+Design should be:
+
+* Professional
+* Clean
+* Modern
+* Minimal
+* Responsive
+* Easy to understand
+* SaaS dashboard style
+* Desktop-first but mobile responsive
+
+IMPORTANT:
+
+Do NOT add unnecessary animations.
+
+Do NOT add:
+
+* Excessive animations
+* Particle effects
+* Background animations
+* 3D effects
+* Flashy transitions
+* Unnecessary gradients
+* Decorative effects that reduce usability
+
+Use subtle hover states and normal UI transitions only where useful.
+
+Focus on:
+
+**Data + usability + clean layout.**
+
+---
+
+# 4. Application Layout
+
+Create a common application layout:
+
+```text
+----------------------------------------------------
+| Sidebar              | Top Navbar                |
+|                      |                           |
+| Dashboard            |                           |
+| Projects             |                           |
+| Notifications        |                           |
+| Settings             |                           |
+|                      |                           |
+|                      | Main Content               |
+|                      |                           |
+----------------------------------------------------
+```
+
+Desktop:
+
+```text
+Sidebar
+   +
+Top Navbar
+   +
+Main Content
+```
+
+Mobile:
+
+Sidebar should become a responsive menu/drawer.
+
+---
+
+# 5. Sidebar
+
+Create:
+
+```text
+Website Monitor
+
+Dashboard
+Projects
+Notifications
+Settings
+
+----------------
+
+User Profile
+Logout
+```
+
+Use clean icons.
+
+Sidebar should clearly show active navigation.
+
+---
+
+# 6. Top Navbar
+
+Show:
+
+```text
+Page Title
+
+Search / optional
+
+Notification Bell 🔔
+
+User Profile
+```
+
+Notification badge should show unread count.
+
+Example:
+
+```text
+🔔 3
+```
+
+---
+
+# 7. Routes
+
+Create React routes:
+
+```text
+/login
+/register
+
+/dashboard
+
+/projects
+/projects/new
+/projects/:id
+/projects/:id/edit
+
+/monitors/new
+/monitors/:id
+
+/notifications
+
+/settings
+```
+
+Protected application routes:
+
+```text
+/dashboard
+/projects/*
+/monitors/*
+/notifications
+/settings
+```
+
+For the frontend demo, use temporary authentication state.
+
+---
+
+# 8. Login Page
+
+Create professional login page.
+
+Fields:
+
+```text
+Email
+Password
+```
+
+Buttons:
+
+```text
+Login
+```
+
+Links:
+
+```text
+Forgot password?
+Create account
+```
+
+For temporary frontend development:
+
+```text
+demo@example.com
+password123
+```
+
+can be used.
+
+Do NOT build real authentication yet.
+
+---
+
+# 9. Register Page
+
+Fields:
+
+```text
+Name
+Email
+Password
+Confirm Password
+```
+
+Button:
+
+```text
+Create Account
+```
+
+Use frontend validation.
+
+---
+
+# 10. Main Dashboard
+
+Dashboard must be the most important page.
+
+Top:
+
+```text
+Good morning, User
+
+Monitor the health of your websites from one place.
+```
+
+Statistics cards:
+
+```text
+Total Projects
+Healthy Websites
+Down Websites
+Active Incidents
+```
+
+Additional cards:
+
+```text
+Average Uptime
+Average Response Time
+Total Checks
+```
+
+Example temporary data:
+
+```text
+Projects: 5
+Healthy: 4
+Down: 1
+Incidents: 2
+Uptime: 99.72%
+Response Time: 284 ms
+```
+
+These numbers must come from a centralized mock data structure, NOT hardcoded separately in every component.
+
+---
+
+# 11. Dashboard Project Overview
+
+Display all projects.
+
+Example:
+
+```text
+Khet Saathi
+🟢 UP
+99.94%
+245 ms
+
+Portfolio
+🟢 UP
+99.99%
+180 ms
+
+Client Website
+🔴 DOWN
+94.20%
+2.4 sec
+```
+
+Each card should have:
+
+* Project name
+* Website URL
+* Status
+* Uptime
+* Response time
+* HTTP status
+* Last checked
+* View Dashboard button
+
+---
+
+# 12. Dashboard Charts
+
+Use Recharts.
+
+Create:
+
+### Overall Uptime Chart
+
+Show:
+
+```text
+Last 24 Hours
+Last 7 Days
+Last 30 Days
+```
+
+Use realistic temporary monitoring data.
+
+---
+
+### Response Time Chart
+
+Line chart:
+
+```text
+Time
+vs
+Response Time
+```
+
+Example:
+
+```text
+09:00 → 220ms
+10:00 → 245ms
+11:00 → 280ms
+12:00 → 230ms
+13:00 → 350ms
+```
+
+---
+
+### Website Status Overview
+
+Show:
+
+```text
+UP
+DOWN
+WARNING
+PAUSED
+```
+
+Use a chart or visual summary.
+
+---
+
+# 13. Projects Page
+
+Create:
+
+```text
+Projects
+
+[ + Create Project ]
+```
+
+Show project cards/table.
+
+Each project should display:
+
+```text
+Project Name
+Website
+Status
+Uptime
+Response Time
+Last Checked
+```
+
+Actions:
+
+```text
+View
+Edit
+Delete
+```
+
+---
+
+# 14. Create Project Page
+
+Form:
+
+```text
+Project Name
+Description
+Website Name
+Website URL
+Monitoring Interval
+Timeout
+```
+
+Monitoring interval:
+
+```text
+1 minute
+5 minutes
+10 minutes
+30 minutes
+60 minutes
+```
+
+Alert configuration:
+
+```text
+☑ Website Down
+☑ Website Recovered
+☑ Slow Response
+```
+
+Button:
+
+```text
+Create Project
+```
+
+For this frontend phase, save project to mock/local state.
+
+---
+
+# 15. Project Detail Dashboard
+
+This page is extremely important.
+
+Route:
+
+```text
+/projects/:id
+```
+
+Top section:
+
+```text
+Khet Saathi
+
+https://khet-saathi-wheat.vercel.app
+
+🟢 Operational
+
+Last checked:
+30 seconds ago
+```
+
+Statistics:
+
+```text
+Uptime
+99.94%
+
+Response Time
+245 ms
+
+HTTP Status
+200
+
+Total Checks
+8,420
+
+Incidents
+2
+
+Downtime
+12 min
+```
+
+---
+
+# 16. Project Charts
+
+Project detail page must have:
+
+### Response Time
+
+Line chart.
+
+### Uptime
+
+Area/line chart.
+
+### HTTP Status Distribution
+
+Show:
+
+```text
+200
+301
+404
+500
+502
+503
+```
+
+### Status Timeline
+
+Example:
+
+```text
+10:00 🟢
+10:05 🟢
+10:10 🟢
+10:15 🔴
+10:20 🔴
+10:25 🟢
+```
+
+---
+
+# 17. Health Score
+
+Show:
+
+```text
+Website Health
+
+96 / 100
+
+Excellent
+```
+
+Use:
+
+* Uptime
+* Response time
+* Incidents
+
+as mock inputs.
+
+Label it:
+
+```text
+Application Health Score
+```
+
+Do not claim it is an industry-standard score.
+
+---
+
+# 18. Monitoring History
+
+Create a history table:
+
+```text
+Time
+Status
+HTTP Status
+Response Time
+Error
+```
+
+Example:
+
+```text
+10:30
+UP
+200
+230ms
+-
+
+10:25
+UP
+200
+250ms
+-
+
+10:20
+DOWN
+500
+2.2s
+Internal Server Error
+```
+
+Add:
+
+```text
+Pagination
+Filter
+Status filter
+Date/time filter
+```
+
+These can use temporary frontend data.
+
+---
+
+# 19. Incidents
+
+Create an incidents section.
+
+Example:
+
+```text
+Incident #1
+
+Website Down
+Started:
+10:15 AM
+
+Resolved:
+10:25 AM
+
+Duration:
+10 minutes
+
+Reason:
+HTTP 500
+
+Status:
+RESOLVED
+```
+
+Status:
+
+```text
+OPEN
+RESOLVED
+```
+
+Use appropriate badges.
+
+---
+
+# 20. Notifications
+
+Create notification page.
+
+Example:
+
+```text
+🔴 Website Down
+Khet Saathi is currently down.
+
+2 minutes ago
+```
+
+```text
+🟢 Website Recovered
+Khet Saathi is back online.
+
+15 minutes ago
+```
+
+```text
+🟡 Slow Response
+Response time exceeded 1000ms.
+
+1 hour ago
+```
+
+Support:
+
+```text
+Mark as read
+Mark all as read
+```
+
+---
+
+# 21. Notification Dropdown
+
+Navbar notification bell should open a dropdown.
+
+Example:
+
+```text
+Notifications
+
+🔴 Website Down
+Client Website
+
+🟢 Website Recovered
+Portfolio
+
+View all notifications
+```
+
+---
+
+# 22. Settings
+
+Create settings page.
+
+Sections:
+
+### Profile
+
+```text
+Name
+Email
+```
+
+### Monitoring Defaults
+
+```text
+Default monitoring interval
+Default timeout
+```
+
+### Notifications
+
+```text
+Website Down
+Website Recovered
+Slow Response
+```
+
+Use temporary state.
+
+---
+
+# 23. Reusable Components
+
+Create clean reusable components:
+
+```text
+Layout
+Sidebar
+Navbar
+PageHeader
+StatCard
+ProjectCard
+StatusBadge
+HealthScore
+UptimeChart
+ResponseTimeChart
+StatusChart
+StatusTimeline
+IncidentTable
+HistoryTable
+NotificationItem
+NotificationDropdown
+Modal
+ConfirmDialog
+FormInput
+SelectInput
+Button
+EmptyState
+LoadingState
+ErrorState
+```
+
+Do NOT create one giant component.
+
+---
+
+# 24. Mock Data Architecture
+
+Create a centralized mock data layer:
+
+```text
+src/
+├── data/
+│   ├── mockUsers.js
+│   ├── mockProjects.js
+│   ├── mockMonitors.js
+│   ├── mockHistory.js
+│   ├── mockIncidents.js
+│   └── mockNotifications.js
+```
+
+Do not scatter fake data throughout components.
+
+Create relationships between mock objects.
+
+Example:
+
+```text
+User
+ ↓
+Projects
+ ↓
+Monitors
+ ↓
+History
+ ↓
+Incidents
+ ↓
+Notifications
+```
+
+---
+
+# 25. API Service Layer
+
+Even though the backend does not exist yet, create:
+
+```text
+src/services/
+    api.js
+    authService.js
+    projectService.js
+    monitorService.js
+    notificationService.js
+```
+
+Initially these services should use mock data.
+
+Structure them so later they can easily switch to:
+
+```text
+Django REST API
+```
+
+without rewriting the UI.
+
+---
+
+# 26. State Management
+
+Do not introduce Redux unless actually necessary.
+
+Use:
+
+* React Context where appropriate
+* useState
+* useEffect
+* Custom hooks
+
+Create reusable hooks where useful:
+
+```text
+useAuth()
+useProjects()
+useNotifications()
+useMonitor()
+```
+
+---
+
+# 27. Loading / Error / Empty States
+
+Every important page should have:
+
+### Loading
+
+```text
+Loading projects...
+```
+
+### Error
+
+```text
+Unable to load project data.
+Try again.
+```
+
+### Empty
+
+```text
+No projects yet.
+
+Create your first monitoring project.
+```
+
+---
+
+# 28. Responsive Design
+
+Desktop:
+
+```text
+Sidebar + Dashboard
+```
+
+Tablet:
+
+```text
+Collapsible sidebar
+```
+
+Mobile:
+
+```text
+Top navigation
+Menu drawer
+Cards stacked vertically
+Charts responsive
+Tables horizontally scrollable
+```
+
+Charts must resize correctly.
+
+---
+
+# 29. UX Rules
+
+Make the interface easy for a non-technical client.
+
+Instead of only:
+
+```text
+HTTP 500
+```
+
+also show:
+
+```text
+🔴 Website Down
+Server returned HTTP 500
+```
+
+Instead of only:
+
+```text
+245
+```
+
+show:
+
+```text
+245 ms
+Average response time
+```
+
+Instead of only:
+
+```text
+99.94
+```
+
+show:
+
+```text
+99.94%
+Uptime
+```
+
+The user should understand the meaning of every important number.
+
+---
+
+# 30. Temporary Data Behavior
+
+The frontend must behave like a real application even before Django exists.
+
+Implement:
+
+* Create project
+* Edit project
+* Delete project
+* View project
+* View monitoring history
+* View incidents
+* View notifications
+* Mark notification as read
+* Filter history
+* Change date range for charts
+* Check Now simulation
+
+For "Check Now", simulate a realistic monitoring result.
+
+Example:
+
+```text
+Before:
+🟢 UP
+
+Click Check Now
+
+After:
+🟢 UP
+HTTP 200
+Response 238ms
+Checked just now
+```
+
+Do not call a real external backend yet.
+
+---
+
+# 31. Important Frontend Restriction
+
+DO NOT:
+
+* Create Django code
+* Create Django models
+* Create Django APIs
+* Create PostgreSQL
+* Create Celery
+* Create Redis
+* Create AWS infrastructure
+
+This prompt is ONLY for the React frontend.
+
+---
+
+# 32. Code Quality
+
+Use:
+
+* Clean folder structure
+* Reusable components
+* Clear naming
+* No duplicated UI code
+* No unnecessary dependencies
+* No unnecessary animations
+* No placeholder lorem ipsum
+* Realistic monitoring data
+* Responsive UI
+
+---
+
+# 33. Final Frontend Acceptance Criteria
+
+Before finishing, verify:
+
+1. Login page works with mock authentication.
+2. Register page works with frontend validation.
+3. Dashboard works.
+4. Multiple projects can be displayed.
+5. Project creation works with mock state.
+6. Project editing works.
+7. Project deletion works.
+8. Project detail dashboard works.
+9. Charts display realistic data.
+10. History table works.
+11. Incident section works.
+12. Notifications work.
+13. Notification dropdown works.
+14. Notification read state works.
+15. Settings page works.
+16. Responsive layout works.
+17. No unnecessary animation exists.
+18. UI looks professional.
+19. Mock data is centralized.
+20. API service layer is ready for Django integration.
+
+After completing the frontend, provide:
+
+```text
+1. Project structure
+2. How to install
+3. How to run
+4. Demo login credentials
+5. Main routes
+6. Mock data explanation
+7. How the frontend will connect to Django later
+```
+
+Do not start backend development until this frontend is complete.
