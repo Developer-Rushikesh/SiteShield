@@ -25,22 +25,14 @@ export const CreateProject = () => {
     setLoading(true);
 
     try {
-      // Step 1: Create Project
-      const newProj = await projectService.createProject({
+      // Create Project with URL (Atomic creation & immediate health check)
+      await projectService.createProject({
         name,
-        description
+        description,
+        url,
+        check_interval: parseInt(checkInterval),
+        timeout: parseInt(timeoutVal)
       });
-
-      // Step 2: Create Monitor if URL is provided
-      if (url && newProj && newProj.id) {
-        await monitorService.createMonitor({
-          project: newProj.id,
-          name: `${name} HTTP`,
-          url: url,
-          check_interval: parseInt(checkInterval),
-          timeout: parseInt(timeoutVal)
-        });
-      }
 
       navigate('/projects');
     } catch (err) {

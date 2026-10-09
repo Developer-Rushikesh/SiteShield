@@ -10,6 +10,7 @@ export const EditProject = () => {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [url, setUrl] = useState('');
   const [isActive, setIsActive] = useState(true);
 
   const [loading, setLoading] = useState(true);
@@ -22,6 +23,7 @@ export const EditProject = () => {
         const p = await projectService.getProjectById(id);
         setName(p.name || '');
         setDescription(p.description || '');
+        setUrl(p.website_url || p.url || '');
         setIsActive(p.is_active ?? true);
       } catch (e) {
         setError('Failed to load project details.');
@@ -41,6 +43,7 @@ export const EditProject = () => {
       await projectService.updateProject(id, {
         name,
         description,
+        url,
         is_active: isActive
       });
       navigate(`/projects/${id}`);
@@ -90,6 +93,17 @@ export const EditProject = () => {
               className="form-input"
               value={name}
               onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Target Website URL</label>
+            <input
+              type="url"
+              className="form-input"
+              placeholder="https://example.com"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
             />
           </div>
 

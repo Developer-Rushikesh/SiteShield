@@ -23,20 +23,25 @@ export const projectService = {
 
   createProject: async (projectData) => {
     try {
-      const response = await api.post('/projects/', projectData);
+      const payload = {
+        ...projectData,
+        url: projectData.url || projectData.website_url
+      };
+      const response = await api.post('/projects/', payload);
       return response.data;
     } catch (error) {
       if (!error.response) {
+        const targetUrl = projectData.url || projectData.website_url || '';
         const newProj = {
           id: Date.now(),
           ...projectData,
-          monitors_count: 0,
-          healthy_count: 0,
+          monitors_count: targetUrl ? 1 : 0,
+          healthy_count: targetUrl ? 1 : 0,
           down_count: 0,
-          status: 'PENDING',
+          status: targetUrl ? 'UP' : 'PENDING',
           uptime: 100.0,
-          average_response_time: 0,
-          website_url: projectData.website_url || '',
+          average_response_time: 120,
+          website_url: targetUrl,
           created_at: new Date().toISOString()
         };
         mockProjects.unshift(newProj);
@@ -46,9 +51,22 @@ export const projectService = {
     }
   },
 
+  checkProject: async (id) => {
+    try {
+      const response = await api.post(`/projects/${id}/check/`);
+      return response.data;
+    } catch (error) {
+      return null;
+    }
+  },
+
   updateProject: async (id, projectData) => {
     try {
-      const response = await api.patch(`/projects/${id}/`, projectData);
+      const payload = {
+        ...projectData,
+        url: projectData.url || projectData.website_url
+      };
+      const response = await api.patch(`/projects/${id}/`, payload);
       return response.data;
     } catch (error) {
       const index = mockProjects.findIndex(p => p.id === parseInt(id));

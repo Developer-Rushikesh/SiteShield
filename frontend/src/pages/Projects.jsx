@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Trash2, Edit, ExternalLink, Activity } from 'lucide-react';
+import { Plus, Search, Trash2, Edit, ExternalLink, Activity, RefreshCw } from 'lucide-react';
 import StatusBadge from '../components/common/StatusBadge';
 import LoadingState from '../components/common/LoadingState';
 import ErrorState from '../components/common/ErrorState';
@@ -11,10 +11,11 @@ export const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [checkingId, setCheckingId] = useState(null);
   const [error, setError] = useState(null);
 
-  const fetchProjects = async () => {
-    setLoading(true);
+  const fetchProjects = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     setError(null);
     try {
       const data = await projectService.getProjects();
@@ -22,13 +23,25 @@ export const Projects = () => {
     } catch (err) {
       setError("Failed to fetch projects list.");
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchProjects();
   }, []);
+
+  const handleCheckNow = async (projectId) => {
+    setCheckingId(projectId);
+    try {
+      await projectService.checkProject(projectId);
+      await fetchProjects(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCheckingId(null);
+    }
+  };
 
   const handleDelete = async (id, name) => {
     if (window.confirm(`Are you sure you want to delete project '${name}'?`)) {
@@ -54,9 +67,18 @@ export const Projects = () => {
             Manage and view health statistics for all monitored environments.
           </p>
         </div>
-        <Link to="/projects/new" className="btn btn-primary">
-          <Plus size={18} /> Create Project
-        </Link>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button
+            onClick={() => fetchProjects(true)}
+            className="btn btn-secondary"
+            title="Refresh All Projects"
+          >
+            <RefreshCw size={16} /> Refresh
+          </button>
+          <Link to="/projects/new" className="btn btn-primary">
+            <Plus size={18} /> Create Project
+          </Link>
+        </div>
       </div>
 
       {/* Filter and Search */}
@@ -119,7 +141,16 @@ export const Projects = () => {
                     {p.last_checked ? new Date(p.last_checked).toLocaleTimeString() : 'Never'}
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                    <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
+                      <button
+                        onClick={() => handleCheckNow(p.id)}
+                        disabled={checkingId === p.id}
+                        className="btn btn-secondary btn-sm"
+                        title="Scan HTTP Health Now"
+                      >
+                        <RefreshCw size={13} className={checkingId === p.id ? "spin" : ""} style={{ animation: checkingId === p.id ? 'spin 1s linear infinite' : 'none' }} />
+                        {checkingId === p.id ? 'Scanning...' : 'Ping'}
+                      </button>
                       <Link to={`/projects/${p.id}`} className="btn btn-secondary btn-sm" title="View Dashboard">
                         <Activity size={14} /> View
                       </Link>
