@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Search, Menu } from 'lucide-react';
+import { Bell, Search, Menu, LogOut, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import NotificationDropdown from '../dashboard/NotificationDropdown';
 import { notificationService } from '../../services/notificationService';
 
 export const Navbar = ({ title = "Dashboard", onMenuClick }) => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [notifications, setNotifications] = useState([]);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   const fetchNotifs = async () => {
     try {
@@ -70,7 +79,7 @@ export const Navbar = ({ title = "Dashboard", onMenuClick }) => {
         </h1>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
         {/* Search bar */}
         <div style={{ position: 'relative', width: '220px' }}>
           <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
@@ -128,6 +137,42 @@ export const Navbar = ({ title = "Dashboard", onMenuClick }) => {
               onClose={() => setShowDropdown(false)}
             />
           )}
+        </div>
+
+        {/* User Profile Side Logout Button */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: '0.75rem', borderLeft: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--accent-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+              {user?.name ? user.name[0].toUpperCase() : (user?.email ? user.email[0].toUpperCase() : 'U')}
+            </div>
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {user?.name || user?.email?.split('@')[0] || 'User'}
+            </span>
+          </div>
+
+          <button
+            onClick={handleLogout}
+            title="Log Out Account"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.4rem 0.75rem',
+              backgroundColor: 'rgba(239, 68, 68, 0.08)',
+              color: '#ef4444',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#ef4444'; e.currentTarget.style.color = '#ffffff'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.08)'; e.currentTarget.style.color = '#ef4444'; }}
+          >
+            <LogOut size={14} />
+            <span>Logout</span>
+          </button>
         </div>
       </div>
     </header>

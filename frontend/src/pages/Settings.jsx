@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Save, User, Bell, Sliders, Check, Key, Smartphone, MessageSquare, Mail, AlertTriangle, ShieldCheck, Clock } from 'lucide-react';
+import { Save, User, Bell, Sliders, Check, Key, Smartphone, MessageSquare, Mail, AlertTriangle, ShieldCheck, Clock, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export const Settings = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   // User Data State
   const [name, setName] = useState(user?.name || user?.first_name || 'Demo Admin');
@@ -119,9 +121,34 @@ export const Settings = () => {
       {/* 1. User Profile Data */}
       <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <div className="card">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
-            <User size={20} style={{ color: 'var(--accent-primary)' }} />
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>User Profile & Contact Details</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <User size={20} style={{ color: 'var(--accent-primary)' }} />
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>User Profile & Contact Details</h3>
+            </div>
+            <button
+              type="button"
+              onClick={async () => { await logout(); navigate('/login'); }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.4rem 0.85rem',
+                backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                color: '#ef4444',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.825rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#ef4444'; e.currentTarget.style.color = '#ffffff'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.08)'; e.currentTarget.style.color = '#ef4444'; }}
+            >
+              <LogOut size={15} />
+              <span>Log Out Account</span>
+            </button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
