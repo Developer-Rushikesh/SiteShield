@@ -1,0 +1,22 @@
+# Node / Frontend dependencies & build
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+*.log
+
+# Python / Backend
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+backend/db.sqlite3
+.venv/
+venv/
+ENV/
+backend/.env
+
+# IDE / OS
+.DS_Store
+.vscode/
+.idea/

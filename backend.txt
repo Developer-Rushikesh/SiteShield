@@ -1,0 +1,946 @@
+# BACKEND DEVELOPMENT PROMPT
+
+## Django REST API + SQLite + Real Website Monitoring
+
+The React frontend has already been created.
+
+Now build the complete BACKEND and replace the frontend mock data with real Django REST API data.
+
+Do NOT redesign the frontend.
+
+The existing React UI and routes should remain intact unless a small change is required for API integration.
+
+---
+
+# 1. Backend Technology
+
+Use:
+
+* Python
+* Django
+* Django REST Framework
+* SQLite
+* Django ORM
+* django-cors-headers
+* requests or httpx
+
+Do NOT use PostgreSQL yet.
+
+Do NOT require Redis/Celery in the initial implementation.
+
+However, structure the monitoring service so Celery + Redis can be added later.
+
+---
+
+# 2. Backend Structure
+
+Create:
+
+```text
+backend/
+├── manage.py
+├── config/
+├── users/
+├── projects/
+├── monitors/
+├── notifications/
+├── requirements.txt
+├── .env.example
+└── db.sqlite3
+```
+
+Keep responsibilities separated.
+
+---
+
+# 3. Authentication
+
+Implement:
+
+```text
+Register
+Login
+Logout
+Current User
+```
+
+Use secure authentication suitable for a React + DRF application.
+
+Protect private APIs.
+
+Every user must only access their own:
+
+```text
+Projects
+Monitors
+Monitoring History
+Incidents
+Notifications
+```
+
+---
+
+# 4. Database Models
+
+Create the following.
+
+## Project
+
+```text
+id
+user
+name
+description
+is_active
+created_at
+updated_at
+```
+
+---
+
+## Monitor
+
+```text
+id
+project
+name
+url
+monitor_type
+check_interval
+timeout
+is_active
+current_status
+last_checked_at
+created_at
+updated_at
+```
+
+Initial monitor type:
+
+```text
+HTTP
+```
+
+---
+
+## MonitoringRecord
+
+```text
+id
+monitor
+checked_at
+status
+http_status_code
+response_time
+error_message
+```
+
+---
+
+## Incident
+
+```text
+id
+monitor
+started_at
+resolved_at
+status
+reason
+http_status_code
+duration
+created_at
+```
+
+Statuses:
+
+```text
+OPEN
+RESOLVED
+```
+
+---
+
+## Notification
+
+```text
+id
+user
+project
+monitor
+type
+title
+message
+is_read
+created_at
+```
+
+---
+
+# 5. Relationships
+
+Use:
+
+```text
+User
+ │
+ ├── Project
+ │      │
+ │      └── Monitor
+ │             │
+ │             ├── MonitoringRecord
+ │             └── Incident
+ │
+ └── Notification
+```
+
+Use proper ForeignKey relationships.
+
+---
+
+# 6. API Endpoints
+
+Implement:
+
+```text
+POST /api/auth/register/
+POST /api/auth/login/
+POST /api/auth/logout/
+GET  /api/auth/me/
+```
+
+Projects:
+
+```text
+GET    /api/projects/
+POST   /api/projects/
+GET    /api/projects/<id>/
+PUT    /api/projects/<id>/
+PATCH  /api/projects/<id>/
+DELETE /api/projects/<id>/
+```
+
+Monitors:
+
+```text
+GET    /api/monitors/
+POST   /api/monitors/
+GET    /api/monitors/<id>/
+PATCH  /api/monitors/<id>/
+DELETE /api/monitors/<id>/
+POST   /api/monitors/<id>/check/
+```
+
+Monitoring:
+
+```text
+GET /api/monitors/<id>/history/
+GET /api/monitors/<id>/statistics/
+GET /api/monitors/<id>/incidents/
+```
+
+Notifications:
+
+```text
+GET   /api/notifications/
+PATCH /api/notifications/<id>/read/
+POST  /api/notifications/read-all/
+```
+
+Dashboard:
+
+```text
+GET /api/dashboard/summary/
+```
+
+---
+
+# 7. Website Monitoring Service
+
+Create a dedicated monitoring service.
+
+Example:
+
+```text
+monitors/
+    services/
+        monitoring_service.py
+```
+
+Create:
+
+```text
+check_website(monitor)
+```
+
+It must:
+
+1. Validate URL
+2. Make HTTP/HTTPS request
+3. Measure response time
+4. Capture HTTP status
+5. Determine UP/DOWN/WARNING
+6. Save MonitoringRecord
+7. Update Monitor
+8. Detect incident
+9. Resolve incident when recovered
+10. Create notifications where necessary
+
+---
+
+# 8. Status Rules
+
+Implement clear rules.
+
+Example:
+
+```text
+UP:
+HTTP 2xx / 3xx
+
+WARNING:
+Slow response
+
+DOWN:
+Connection failure
+Timeout
+DNS failure
+HTTP 5xx
+```
+
+Handle:
+
+```text
+400
+401
+403
+404
+429
+500
+502
+503
+504
+timeout
+connection error
+DNS error
+SSL error
+```
+
+Do not blindly classify every HTTP error as infrastructure failure.
+
+Store the actual HTTP status for transparency.
+
+---
+
+# 9. Response Time
+
+Measure actual request duration.
+
+Store it in milliseconds.
+
+Example:
+
+```text
+245 ms
+```
+
+Use this data later for:
+
+```text
+Response Time Chart
+Average Response Time
+Health Score
+Slow Response Alerts
+```
+
+---
+
+# 10. Incident Logic
+
+IMPORTANT:
+
+Do not create an incident for every failed check.
+
+Example:
+
+```text
+10:00 DOWN
+10:05 DOWN
+10:10 DOWN
+```
+
+should create:
+
+```text
+ONE OPEN INCIDENT
+```
+
+When:
+
+```text
+10:15 UP
+```
+
+resolve that incident.
+
+Calculate:
+
+```text
+Downtime Duration
+```
+
+Example:
+
+```text
+Started:
+10:00
+
+Resolved:
+10:15
+
+Duration:
+15 minutes
+```
+
+---
+
+# 11. Notifications
+
+Create notifications when:
+
+### Website Down
+
+```text
+Website Down
+Khet Saathi is currently unavailable.
+```
+
+### Website Recovered
+
+```text
+Website Recovered
+Khet Saathi is back online.
+```
+
+### Slow Response
+
+```text
+Slow Response
+Khet Saathi response time exceeded the configured threshold.
+```
+
+Avoid notification spam.
+
+Do not create the same notification repeatedly for every failed check.
+
+---
+
+# 12. Statistics API
+
+Create statistics endpoint returning data required by React charts.
+
+Example:
+
+```json
+{
+  "uptime": 99.94,
+  "average_response_time": 245,
+  "total_checks": 8420,
+  "incidents": 2,
+  "downtime_minutes": 12
+}
+```
+
+Also return chart data:
+
+```json
+{
+  "response_time": [],
+  "uptime": [],
+  "status_distribution": [],
+  "timeline": []
+}
+```
+
+The exact structure should be clean and easy for React to consume.
+
+---
+
+# 13. Dashboard Summary API
+
+Return:
+
+```text
+Total Projects
+Healthy Websites
+Down Websites
+Active Incidents
+Average Uptime
+Average Response Time
+```
+
+Also return project summaries.
+
+Example:
+
+```json
+{
+  "total_projects": 3,
+  "healthy_websites": 2,
+  "down_websites": 1,
+  "active_incidents": 1,
+  "projects": []
+}
+```
+
+---
+
+# 14. URL Security
+
+This is VERY important.
+
+Because users provide URLs that the server will request, protect against SSRF.
+
+Do not allow monitoring of:
+
+```text
+127.0.0.1
+localhost
+0.0.0.0
+private IPv4 ranges
+private IPv6 ranges
+cloud metadata endpoints
+internal network addresses
+```
+
+Validate URLs before monitoring.
+
+Only allow:
+
+```text
+http://
+https://
+```
+
+Do not trust user-provided URLs blindly.
+
+---
+
+# 15. Frontend Integration
+
+Now remove the dependency on frontend mock data.
+
+Update:
+
+```text
+src/services/
+```
+
+to call Django APIs.
+
+Example:
+
+```text
+authService.js
+projectService.js
+monitorService.js
+notificationService.js
+dashboardService.js
+```
+
+Use Axios.
+
+Create a centralized Axios instance:
+
+```text
+src/services/api.js
+```
+
+Configure backend base URL using environment variable:
+
+```text
+VITE_API_BASE_URL
+```
+
+Example:
+
+```text
+http://127.0.0.1:8000/api
+```
+
+Do NOT hardcode production URLs inside components.
+
+---
+
+# 16. Replace Mock Data
+
+Replace:
+
+```text
+mockProjects
+mockHistory
+mockIncidents
+mockNotifications
+```
+
+with real API responses.
+
+The UI must remain visually the same.
+
+Charts should now use real SQLite database records.
+
+---
+
+# 17. Check Now
+
+When user clicks:
+
+```text
+Check Now
+```
+
+React calls:
+
+```text
+POST /api/monitors/<id>/check/
+```
+
+Django performs the actual website check.
+
+Then return:
+
+```text
+status
+http_status
+response_time
+checked_at
+```
+
+React updates the dashboard.
+
+---
+
+# 18. Project Creation
+
+When user creates a project from React:
+
+```text
+POST /api/projects/
+```
+
+Django saves it in SQLite.
+
+When the user opens Projects page:
+
+```text
+GET /api/projects/
+```
+
+Real database data should appear.
+
+---
+
+# 19. Monitoring History
+
+React should call:
+
+```text
+GET /api/monitors/<id>/history/
+```
+
+Return real monitoring records.
+
+Use them to generate:
+
+* Response time chart
+* Uptime chart
+* Status timeline
+* History table
+
+---
+
+# 20. Incidents
+
+React should call:
+
+```text
+GET /api/monitors/<id>/incidents/
+```
+
+Display:
+
+* Open incidents
+* Resolved incidents
+* Start time
+* End time
+* Duration
+* Reason
+* HTTP status
+
+---
+
+# 21. Notifications
+
+React should call:
+
+```text
+GET /api/notifications/
+```
+
+Notification bell should display real notifications.
+
+Implement:
+
+```text
+PATCH /api/notifications/<id>/read/
+```
+
+and:
+
+```text
+POST /api/notifications/read-all/
+```
+
+---
+
+# 22. Scheduler Architecture
+
+For the initial version:
+
+DO NOT put an infinite loop inside Django API requests.
+
+The architecture must keep monitoring logic independent.
+
+Create:
+
+```text
+Monitoring Service
+```
+
+which can later be executed by:
+
+```text
+Celery Worker
+```
+
+For this first SQLite version, provide a simple development mechanism for scheduled monitoring and clearly document its limitations.
+
+Also keep:
+
+```text
+Check Now
+```
+
+working independently.
+
+Future production architecture:
+
+```text
+Django
+   ↓
+Celery
+   ↓
+Redis
+   ↓
+Monitoring Worker
+   ↓
+Website
+```
+
+---
+
+# 23. Seed Demo Data
+
+Create:
+
+```text
+python manage.py seed_demo
+```
+
+It should create:
+
+* Demo user
+* Multiple projects
+* Multiple monitors
+* Monitoring history
+* Incidents
+* Notifications
+
+This is only for development/demo.
+
+---
+
+# 24. Postman Testing
+
+Provide complete Postman testing instructions.
+
+Test:
+
+```text
+Register
+Login
+Current User
+Create Project
+List Projects
+Create Monitor
+Check Website
+Get History
+Get Statistics
+Get Incidents
+Get Notifications
+Mark Notification Read
+Dashboard Summary
+```
+
+---
+
+# 25. Backend Tests
+
+Create tests for:
+
+* Authentication
+* Project ownership
+* Monitor creation
+* URL validation
+* Website UP
+* Website DOWN
+* Timeout
+* Monitoring record
+* Incident creation
+* Incident resolution
+* Notification creation
+* User isolation
+* Statistics
+
+---
+
+# 26. Environment Variables
+
+Create:
+
+```text
+.env.example
+```
+
+Include appropriate variables such as:
+
+```text
+SECRET_KEY=
+DEBUG=True
+ALLOWED_HOSTS=
+CORS_ALLOWED_ORIGINS=
+```
+
+Do not commit real secrets.
+
+SQLite should remain the default development database.
+
+---
+
+# 27. Documentation
+
+Update README with:
+
+```text
+Backend setup
+Frontend setup
+SQLite setup
+Environment variables
+API endpoints
+Authentication
+Monitoring architecture
+Database models
+Monitoring logic
+Incident logic
+Notification logic
+Postman testing
+Troubleshooting
+```
+
+Also explain how to later migrate from:
+
+```text
+SQLite
+```
+
+to:
+
+```text
+PostgreSQL
+```
+
+and from:
+
+```text
+Development scheduler
+```
+
+to:
+
+```text
+Celery + Redis
+```
+
+---
+
+# 28. Final Integration Test
+
+The complete application must support this exact flow:
+
+1. Start Django backend.
+2. Start React frontend.
+3. Register user.
+4. Login.
+5. Create Project.
+6. Enter real website URL.
+7. Create Monitor.
+8. Click Check Now.
+9. Django actually checks the website.
+10. Result is saved to SQLite.
+11. Dashboard receives real API data.
+12. Status appears.
+13. Response time appears.
+14. HTTP status appears.
+15. Monitoring history appears.
+16. Charts use real records.
+17. Incidents appear when failures occur.
+18. Recovery resolves incidents.
+19. Notifications are created.
+20. Multiple projects work independently.
+21. User can only see their own data.
+
+---
+
+# 29. Final Important Rule
+
+Do NOT redesign the existing React frontend.
+
+The goal is:
+
+```text
+Existing React UI
+       ↓
+Django REST API
+       ↓
+SQLite
+       ↓
+Real Website Monitoring
+```
+
+The frontend mock data should gradually be replaced with real backend data.
+
+Keep the professional frontend design exactly as much as possible.
+
+After completing the backend, provide:
+
+```text
+1. Backend project structure
+2. Database models
+3. API documentation
+4. Setup commands
+5. Environment variables
+6. Postman testing steps
+7. Frontend integration explanation
+8. Monitoring architecture
+9. Known limitations
+10. Future Celery + Redis migration plan
+```
