@@ -1,0 +1,62 @@
+export const mockProjects = [
+  {
+    id: 1,
+    name: "Khet Saathi",
+    description: "Smart Agri-tech platform and web service",
+    is_active: true,
+    created_at: "2026-09-01T10:00:00Z",
+    monitors_count: 1,
+    healthy_count: 1,
+    down_count: 0,
+    status: "UP",
+    uptime: 99.94,
+    average_response_time: 245,
+    website_url: "https://khet-saathi-wheat.vercel.app",
+    last_checked: "2026-10-06T12:30:00Z"
+  },
+  {
+    id: 2,
+    name: "Portfolio Website",
+    description: "Personal developer portfolio and showcase",
+    is_active: true,
+    created_at: "2026-09-05T14:20:00Z",
+    monitors_count: 1,
+    healthy_count: 1,
+    down_count: 0,
+    status: "UP",
+    uptime: 99.99,
+    average_response_time: 180,
+    website_url: "https://example.com",
+    last_checked: "2026-10-06T12:28:00Z"
+  },
+  {
+    id: 3,
+    name: "Client E-Commerce API",
+    description: "Backend REST API for online retail client",
+    is_active: true,
+    created_at: "2026-09-10T11:15:00Z",
+    monitors_count: 1,
+    healthy_count: 1,
+    down_count: 0,
+    status: "UP",
+    uptime: 98.85,
+    average_response_time: 310,
+    website_url: "https://httpbin.org/status/200",
+    last_checked: "2026-10-06T12:25:00Z"
+  },
+  {
+    id: 4,
+    name: "Legacy Microservice",
+    description: "Payment gateway callback microservice",
+    is_active: true,
+    created_at: "2026-09-15T09:00:00Z",
+    monitors_count: 1,
+    healthy_count: 0,
+    down_count: 1,
+    status: "DOWN",
+    uptime: 92.40,
+    average_response_time: 2400,
+    website_url: "https://httpbin.org/status/500",
+    last_checked: "2026-10-06T12:31:00Z"
+  }
+];
