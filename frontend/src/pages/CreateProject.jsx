@@ -31,7 +31,7 @@ export const CreateProject = () => {
         description,
         url,
         check_interval: parseInt(checkInterval),
-        timeout: parseInt(timeoutVal)
+        timeout: parseInt(timeout)
       });
 
       navigate('/projects');
