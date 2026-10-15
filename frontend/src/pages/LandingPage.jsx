@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShieldCheck, Activity, Zap, MessageSquare, Smartphone, User, ArrowRight, CheckCircle2, FileText, Bot, Lock, LogIn, ExternalLink } from 'lucide-react';
 import logoImg from '../images/logo.png';
+import LogoLoader from '../components/common/LogoLoader';
 
 export const LandingPage = () => {
   const navigate = useNavigate();
+  const [showLoader, setShowLoader] = useState(true);
 
   const handleRedirectDashboard = () => {
     navigate('/dashboard');
@@ -12,6 +14,9 @@ export const LandingPage = () => {
 
   return (
     <div style={{ backgroundColor: 'var(--bg-primary)', minHeight: '100vh', color: 'var(--text-primary)', fontFamily: 'Inter, sans-serif' }}>
+      {/* Premium Animated Logo Loader for SiteShield */}
+      {showLoader && <LogoLoader onFinish={() => setShowLoader(false)} />}
+
       {/* 1. Header / Navbar */}
       <header
         style={{

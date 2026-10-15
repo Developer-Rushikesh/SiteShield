@@ -1,0 +1,374 @@
+/* SiteShield Premium Animated Logo Loader */
+
+.siteshield-loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #080D1A;
+  background-image: 
+    radial-gradient(circle at 50% 45%, #101A30 0%, #080D1A 70%),
+    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 32px 32px, 32px 32px;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.45s ease;
+  user-select: none;
+  overflow: hidden;
+}
+
+.siteshield-loader-overlay.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Ambient Cyber Radar / Aura */
+.loader-ambient-aura {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 212, 255, 0.12) 0%, rgba(57, 120, 255, 0.05) 50%, transparent 70%);
+  filter: blur(28px);
+  animation: auraPulse 2.4s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.loader-cyber-ring {
+  position: absolute;
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  border: 1px dashed rgba(0, 212, 255, 0.25);
+  animation: cyberRingRotate 12s linear infinite;
+  pointer-events: none;
+}
+
+.loader-cyber-ring-inner {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 1px solid rgba(57, 120, 255, 0.18);
+  border-top-color: rgba(0, 212, 255, 0.6);
+  border-bottom-color: rgba(0, 212, 255, 0.6);
+  animation: cyberRingRotateReverse 8s linear infinite;
+  pointer-events: none;
+}
+
+/* Center Logo Assembly Stage */
+.loader-stage {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+/* 4 Slices of Logo */
+.logo-slice {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* Top Part: Converges downward */
+.logo-slice-top {
+  clip-path: polygon(0% 0%, 100% 0%, 50% 50%);
+  animation: sliceTopAssemble 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Bottom Part: Converges upward */
+.logo-slice-bottom {
+  clip-path: polygon(0% 100%, 100% 100%, 50% 50%);
+  animation: sliceBottomAssemble 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Left Part: Converges right */
+.logo-slice-left {
+  clip-path: polygon(0% 0%, 0% 100%, 50% 50%);
+  animation: sliceLeftAssemble 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Right Part: Converges left */
+.logo-slice-right {
+  clip-path: polygon(100% 0%, 100% 100%, 50% 50%);
+  animation: sliceRightAssemble 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Complete Logo (Fades in once assembled to cover seams and pulses) */
+.logo-complete {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  filter: drop-shadow(0 0 16px rgba(0, 212, 255, 0.55)) drop-shadow(0 0 32px rgba(57, 120, 255, 0.35));
+  animation: completeLogoGlow 1.4s ease-out 0.8s forwards;
+  will-change: transform, opacity, filter;
+}
+
+/* Highlight Sweep / Sheen across logo */
+.logo-highlight-sweep {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  mask-size: contain;
+  -webkit-mask-size: contain;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-position: center;
+  overflow: hidden;
+  opacity: 0;
+  animation: sweepFadeIn 0.3s ease-in 0.9s forwards;
+}
+
+.logo-highlight-sweep::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: -60%;
+  width: 220%;
+  height: 140%;
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    rgba(0, 212, 255, 0.3) 46%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(0, 212, 255, 0.3) 54%,
+    transparent 65%
+  );
+  transform: translateX(-100%);
+  animation: sweepPass 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.95s forwards;
+}
+
+/* Typography & Info */
+.loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: contentFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.85s forwards;
+}
+
+.loader-brand-title {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #F4F7FF;
+  letter-spacing: 0.05em;
+  line-height: 1.15;
+  margin: 0;
+  background: linear-gradient(180deg, #FFFFFF 30%, #D0E3FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(0, 212, 255, 0.3));
+}
+
+.loader-brand-subtitle {
+  font-size: 0.825rem;
+  color: #94A3B8;
+  letter-spacing: 0.03em;
+  margin-top: 0.35rem;
+  margin-bottom: 1.15rem;
+  font-weight: 500;
+}
+
+/* Futuristic Slim Progress Bar */
+.loader-progress-track {
+  width: 170px;
+  height: 2.5px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.loader-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #00D4FF, #3978FF);
+  border-radius: 99px;
+  box-shadow: 0 0 10px #00D4FF, 0 0 4px #FFFFFF;
+  animation: progressFill 1.1s cubic-bezier(0.4, 0, 0.2, 1) 0.95s forwards;
+}
+
+/* KEYFRAMES */
+
+@keyframes sliceTopAssemble {
+  0% {
+    transform: translateY(-48px) scale(0.92);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes sliceBottomAssemble {
+  0% {
+    transform: translateY(48px) scale(0.92);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes sliceLeftAssemble {
+  0% {
+    transform: translateX(-48px) scale(0.92);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes sliceRightAssemble {
+  0% {
+    transform: translateX(48px) scale(0.92);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes completeLogoGlow {
+  0% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.02);
+    filter: drop-shadow(0 0 22px rgba(0, 212, 255, 0.85)) drop-shadow(0 0 42px rgba(57, 120, 255, 0.55));
+  }
+  65% {
+    opacity: 0.92;
+    transform: scale(0.995);
+    filter: drop-shadow(0 0 14px rgba(0, 212, 255, 0.55)) drop-shadow(0 0 28px rgba(57, 120, 255, 0.35));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 18px rgba(0, 212, 255, 0.75)) drop-shadow(0 0 36px rgba(57, 120, 255, 0.45));
+  }
+}
+
+@keyframes sweepFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sweepPass {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes contentFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes progressFill {
+  0% {
+    width: 0%;
+  }
+  60% {
+    width: 75%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes auraPulse {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes cyberRingRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes cyberRingRotateReverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .siteshield-loader-overlay {
+    transition: opacity 0.2s ease;
+  }
+  .logo-slice-top,
+  .logo-slice-bottom,
+  .logo-slice-left,
+  .logo-slice-right {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  .logo-complete {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  .loader-ambient-aura,
+  .loader-cyber-ring,
+  .loader-cyber-ring-inner,
+  .logo-highlight-sweep::after {
+    animation: none !important;
+  }
+  .loader-content {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .loader-progress-fill {
+    animation: none !important;
+    width: 100% !important;
+  }
+}
