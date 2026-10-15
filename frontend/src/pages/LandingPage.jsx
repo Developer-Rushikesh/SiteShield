@@ -322,7 +322,7 @@ export const LandingPage = () => {
 
           <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', fontSize: '0.8rem', color: '#94a3b8' }}>
             <div>© {new Date().getFullYear()} SiteShield 24 Monitor. All rights reserved.</div>
-            <div>Monitor • Detect • Stay Ahead</div>
+            <div>Developer : Rushikesh Pawar <br /> Email : rushikeshpawar977@gmail.com </div>
           </div>
         </div>
       </footer>
