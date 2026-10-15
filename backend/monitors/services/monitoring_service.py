@@ -8,19 +8,29 @@ from django.db import transaction
 from monitors.models import Monitor, MonitoringRecord, Incident
 from notifications.models import Notification
 
-DISALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '::1']
+DISALLOWED_HOSTS = [
+    'localhost', '127.0.0.1', '0.0.0.0', '::1',
+    'metadata.google.internal', '169.254.169.254', 'instance-data'
+]
 
 def is_ip_private(ip_str):
     try:
         ip = ipaddress.ip_address(ip_str)
-        return ip.is_private or ip.is_loopback or ip.is_link_local
+        return (
+            ip.is_private or
+            ip.is_loopback or
+            ip.is_link_local or
+            ip.is_multicast or
+            ip.is_reserved or
+            ip.is_unspecified
+        )
     except ValueError:
         return False
 
 def validate_url_security(url):
     """
     Validates URL to prevent SSRF attacks.
-    Disallows internal network IP ranges, localhost, and non-http(s) schemes.
+    Disallows internal network IP ranges, loopback, cloud metadata endpoints, and non-http(s) schemes.
     """
     if not url:
         raise ValueError("URL is required.")
@@ -33,8 +43,8 @@ def validate_url_security(url):
     if not hostname:
         raise ValueError("Invalid hostname in URL.")
 
-    if hostname.lower() in DISALLOWED_HOSTS:
-        raise ValueError("Monitoring internal loopback addresses is not permitted.")
+    if hostname.lower() in DISALLOWED_HOSTS or hostname.lower().endswith('.internal') or hostname.lower().endswith('.local'):
+        raise ValueError("Monitoring internal or reserved hostnames is not permitted for security reasons.")
 
     try:
         # Resolve hostname to IP address

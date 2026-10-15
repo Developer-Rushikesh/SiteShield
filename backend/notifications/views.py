@@ -11,6 +11,18 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return Notification.objects.filter(user=self.request.user)
 
+    def get_object(self):
+        pk = self.kwargs.get('pk')
+        try:
+            notif = Notification.objects.get(pk=pk)
+            if notif.user != self.request.user and not self.request.user.is_staff:
+                from rest_framework import exceptions
+                raise exceptions.PermissionDenied("You do not have authorization to access this notification.")
+            return notif
+        except Notification.DoesNotExist:
+            from rest_framework import exceptions
+            raise exceptions.NotFound(f"Notification with ID {pk} not found.")
+
     @action(detail=True, methods=['patch'], url_path='read')
     def mark_read(self, request, pk=None):
         notification = self.get_object()

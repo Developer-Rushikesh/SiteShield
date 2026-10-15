@@ -38,6 +38,28 @@ export const authService = {
     return response.data;
   },
 
+  updateProfile: async (profileData) => {
+    const response = await api.patch('/auth/me/', profileData);
+    if (response.data.user) {
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  },
+
+  changePassword: async (currentPassword, newPassword) => {
+    const response = await api.post('/auth/change-password/', {
+      current_password: currentPassword,
+      new_password: newPassword
+    });
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+    }
+    if (response.data.user) {
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  },
+
   forgotPassword: async (email) => {
     const response = await api.post('/auth/forgot-password/', { email });
     return response.data;
@@ -52,3 +74,5 @@ export const authService = {
     return response.data;
   }
 };
+
+export default authService;

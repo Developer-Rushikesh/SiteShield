@@ -125,18 +125,34 @@ export const Projects = () => {
                   </td>
                   <td>
                     {p.website_url ? (
-                      <a href={p.website_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <a href={p.website_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', color: 'var(--accent-primary)', fontWeight: 500 }}>
                         {p.website_url} <ExternalLink size={12} />
                       </a>
                     ) : (
-                      <span style={{ color: 'var(--text-muted)' }}>No URL</span>
+                      <Link
+                        to={`/projects/${p.id}`}
+                        style={{
+                          fontSize: '0.75rem',
+                          padding: '0.2rem 0.55rem',
+                          borderRadius: '4px',
+                          backgroundColor: 'var(--status-warning-bg)',
+                          color: 'var(--status-warning)',
+                          fontWeight: 600,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                          textDecoration: 'none'
+                        }}
+                      >
+                        ⚠️ Setup Target URL
+                      </Link>
                     )}
                   </td>
                   <td>
                     <StatusBadge status={p.status} />
                   </td>
-                  <td style={{ fontWeight: 600 }}>{p.uptime}%</td>
-                  <td>{p.average_response_time ? `${p.average_response_time} ms` : 'N/A'}</td>
+                  <td style={{ fontWeight: 600 }}>{p.total_checks > 0 ? `${p.uptime}%` : '0.0%'}</td>
+                  <td>{p.average_response_time ? `${p.average_response_time} ms` : (p.total_checks > 0 ? '0 ms' : 'Pending')}</td>
                   <td style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
                     {p.last_checked ? new Date(p.last_checked).toLocaleTimeString() : 'Never'}
                   </td>

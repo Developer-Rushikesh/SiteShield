@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FolderPlus, ArrowLeft, AlertCircle } from 'lucide-react';
+import { FolderPlus, ArrowLeft, AlertCircle, RefreshCw } from 'lucide-react';
 import { projectService } from '../services/projectService';
 import { monitorService } from '../services/monitorService';
 
@@ -154,8 +154,23 @@ export const CreateProject = () => {
             <Link to="/projects" className="btn btn-secondary">
               Cancel
             </Link>
-            <button type="submit" disabled={loading} className="btn btn-primary">
-              <FolderPlus size={18} /> {loading ? 'Saving...' : 'Create Project'}
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary"
+              style={{ minWidth: '180px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+            >
+              {loading ? (
+                <>
+                  <RefreshCw size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                  <span>Scanning & Creating...</span>
+                </>
+              ) : (
+                <>
+                  <FolderPlus size={18} />
+                  <span>Create Project</span>
+                </>
+              )}
             </button>
           </div>
         </form>

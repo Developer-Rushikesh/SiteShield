@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
-import { Save, User, Bell, Sliders, Check, Key, Smartphone, MessageSquare, Mail, AlertTriangle, ShieldCheck, Clock, LogOut } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Save, User, Bell, Sliders, Check, Key, Smartphone, MessageSquare, Mail, AlertTriangle, ShieldCheck, Clock, LogOut, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { authService } from '../services/authService';
 
 export const Settings = () => {
-  const { user, logout } = useAuth();
+  const { user, setUser, logout } = useAuth();
   const navigate = useNavigate();
 
   // User Data State
-  const [name, setName] = useState(user?.name || user?.first_name || 'Demo Admin');
-  const [email, setEmail] = useState(user?.email || 'demo@example.com');
+  const [name, setName] = useState(user?.name || user?.first_name || '');
+  const [email, setEmail] = useState(user?.email || '');
 
   // Password Change State
   const [currentPassword, setCurrentPassword] = useState('');
@@ -17,6 +18,12 @@ export const Settings = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordMsg, setPasswordMsg] = useState(null);
   const [passwordError, setPasswordError] = useState(null);
+  const [savingPassword, setSavingPassword] = useState(false);
+
+  // Profile Save State
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState(null);
+  const [saved, setSaved] = useState(false);
 
   // Monitoring Defaults
   const [defaultInterval, setDefaultInterval] = useState(5);
@@ -37,7 +44,12 @@ export const Settings = () => {
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [alertEmail, setAlertEmail] = useState('alerts@example.com');
 
-  const [saved, setSaved] = useState(false);
+  useEffect(() => {
+    if (user) {
+      setName(user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username || '');
+      setEmail(user.email || '');
+    }
+  }, [user]);
 
   const currentTimeStatic = new Date().toLocaleString('en-US', {
     year: 'numeric',
@@ -49,13 +61,31 @@ export const Settings = () => {
     hour12: true
   });
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    setSaved(false);
+    setProfileError(null);
+    setSavingProfile(true);
+
+    try {
+      const res = await authService.updateProfile({ name, email });
+      if (res.user) setUser(res.user);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3500);
+    } catch (err) {
+      let msg = 'Failed to update profile.';
+      if (err.response?.data?.email) {
+        msg = Array.isArray(err.response.data.email) ? err.response.data.email[0] : err.response.data.email;
+      } else if (err.response?.data?.detail) {
+        msg = err.response.data.detail;
+      }
+      setProfileError(msg);
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = async (e) => {
     e.preventDefault();
     setPasswordMsg(null);
     setPasswordError(null);
@@ -65,7 +95,7 @@ export const Settings = () => {
       return;
     }
     if (newPassword.length < 6) {
-      setPasswordError('New password must be at least 6 characters.');
+      setPasswordError('New password must be at least 6 characters long.');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -73,11 +103,30 @@ export const Settings = () => {
       return;
     }
 
-    setPasswordMsg('Password changed successfully!');
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
-    setTimeout(() => setPasswordMsg(null), 3500);
+    setSavingPassword(true);
+    try {
+      const res = await authService.changePassword(currentPassword, newPassword);
+      setPasswordMsg(res.message || 'Password changed successfully in the database!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => setPasswordMsg(null), 4000);
+    } catch (err) {
+      let msg = 'Failed to update password.';
+      if (err.response?.data) {
+        const d = err.response.data;
+        if (d.current_password) {
+          msg = Array.isArray(d.current_password) ? d.current_password[0] : d.current_password;
+        } else if (d.new_password) {
+          msg = Array.isArray(d.new_password) ? d.new_password[0] : d.new_password;
+        } else if (d.detail) {
+          msg = d.detail;
+        }
+      }
+      setPasswordError(msg);
+    } finally {
+      setSavingPassword(false);
+    }
   };
 
   return (
@@ -99,6 +148,24 @@ export const Settings = () => {
           <span>System Sync: <strong style={{ color: 'var(--text-primary)' }}>{currentTimeStatic}</strong></span>
         </div>
       </div>
+
+      {profileError && (
+        <div
+          style={{
+            padding: '0.85rem 1.1rem',
+            borderRadius: 'var(--radius-sm)',
+            backgroundColor: 'var(--status-down-bg)',
+            color: 'var(--status-down)',
+            fontSize: '0.9rem',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}
+        >
+          <AlertTriangle size={18} /> {profileError}
+        </div>
+      )}
 
       {saved && (
         <div
@@ -232,11 +299,22 @@ export const Settings = () => {
 
           <button
             type="button"
+            disabled={savingPassword}
             onClick={handlePasswordChange}
             className="btn btn-secondary"
-            style={{ fontSize: '0.85rem' }}
+            style={{ fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
           >
-            <Key size={16} /> Update Password
+            {savingPassword ? (
+              <>
+                <RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} />
+                <span>Updating Password in DB...</span>
+              </>
+            ) : (
+              <>
+                <Key size={16} />
+                <span>Update Password</span>
+              </>
+            )}
           </button>
         </div>
 
@@ -403,8 +481,23 @@ export const Settings = () => {
 
         {/* Save Button */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-          <button type="submit" className="btn btn-primary" style={{ padding: '0.75rem 1.75rem' }}>
-            <Save size={18} /> Save All Preferences
+          <button
+            type="submit"
+            disabled={savingProfile}
+            className="btn btn-primary"
+            style={{ padding: '0.75rem 1.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            {savingProfile ? (
+              <>
+                <RefreshCw size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                <span>Saving Preferences...</span>
+              </>
+            ) : (
+              <>
+                <Save size={18} />
+                <span>Save All Preferences</span>
+              </>
+            )}
           </button>
         </div>
       </form>

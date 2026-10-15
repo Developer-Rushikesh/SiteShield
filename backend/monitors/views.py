@@ -12,7 +12,23 @@ class MonitorViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Monitor.objects.filter(project__user=self.request.user)
+        qs = Monitor.objects.filter(project__user=self.request.user)
+        project_param = self.request.query_params.get('project')
+        if project_param and project_param.isdigit():
+            qs = qs.filter(project_id=int(project_param))
+        return qs
+
+    def get_object(self):
+        pk = self.kwargs.get('pk')
+        try:
+            monitor = Monitor.objects.get(pk=pk)
+            if monitor.project.user != self.request.user and not self.request.user.is_staff:
+                from rest_framework import exceptions
+                raise exceptions.PermissionDenied("You do not have authorization to access this monitor.")
+            return monitor
+        except Monitor.DoesNotExist:
+            from rest_framework import exceptions
+            raise exceptions.NotFound(f"Monitor with ID {pk} not found.")
 
     def perform_create(self, serializer):
         project_id = self.request.data.get('project')
