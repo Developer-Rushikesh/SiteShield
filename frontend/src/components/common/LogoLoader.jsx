@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './LogoLoader.css';
 import logoImg from '../../images/logo.png';
 
-export const LogoLoader = ({ onFinish, minDuration = 2000 }) => {
+export const LogoLoader = ({ onFinish, minDuration = 3000 }) => {
   const [isFading, setIsFading] = useState(false);
 
   useEffect(() => {
@@ -15,14 +15,14 @@ export const LogoLoader = ({ onFinish, minDuration = 2000 }) => {
       () => {
         setIsFading(true);
       },
-      prefersReducedMotion ? 250 : minDuration - 400
+      prefersReducedMotion ? 300 : Math.max(minDuration - 500, 0)
     );
 
     const finishTimeout = setTimeout(
       () => {
         if (onFinish) onFinish();
       },
-      prefersReducedMotion ? 400 : minDuration
+      prefersReducedMotion ? 500 : minDuration
     );
 
     return () => {

@@ -16,7 +16,7 @@
   background-size: 100% 100%, 32px 32px, 32px 32px;
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.45s ease;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.5s ease;
   user-select: none;
   overflow: hidden;
 }
@@ -87,25 +87,25 @@
 /* Top Part: Converges downward */
 .logo-slice-top {
   clip-path: polygon(0% 0%, 100% 0%, 50% 50%);
-  animation: sliceTopAssemble 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: sliceTopAssemble 1.0s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Bottom Part: Converges upward */
 .logo-slice-bottom {
   clip-path: polygon(0% 100%, 100% 100%, 50% 50%);
-  animation: sliceBottomAssemble 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: sliceBottomAssemble 1.0s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Left Part: Converges right */
 .logo-slice-left {
   clip-path: polygon(0% 0%, 0% 100%, 50% 50%);
-  animation: sliceLeftAssemble 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: sliceLeftAssemble 1.0s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Right Part: Converges left */
 .logo-slice-right {
   clip-path: polygon(100% 0%, 100% 100%, 50% 50%);
-  animation: sliceRightAssemble 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: sliceRightAssemble 1.0s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Complete Logo (Fades in once assembled to cover seams and pulses) */
@@ -118,7 +118,7 @@
   object-fit: contain;
   opacity: 0;
   filter: drop-shadow(0 0 16px rgba(0, 212, 255, 0.55)) drop-shadow(0 0 32px rgba(57, 120, 255, 0.35));
-  animation: completeLogoGlow 1.0s ease-out 0.65s forwards;
+  animation: completeLogoGlow 1.5s ease-out 0.95s forwards;
   will-change: transform, opacity, filter;
 }
 
@@ -138,7 +138,7 @@
   -webkit-mask-position: center;
   overflow: hidden;
   opacity: 0;
-  animation: sweepFadeIn 0.25s ease-in 0.75s forwards;
+  animation: sweepFadeIn 0.3s ease-in 1.05s forwards;
 }
 
 .logo-highlight-sweep::after {
@@ -157,7 +157,7 @@
     transparent 65%
   );
   transform: translateX(-100%);
-  animation: sweepPass 0.75s cubic-bezier(0.4, 0, 0.2, 1) 0.8s forwards;
+  animation: sweepPass 1.0s cubic-bezier(0.4, 0, 0.2, 1) 1.1s forwards;
 }
 
 /* Typography & Info */
@@ -168,7 +168,7 @@
   text-align: center;
   opacity: 0;
   transform: translateY(8px);
-  animation: contentFadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards;
+  animation: contentFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 1.0s forwards;
 }
 
 .loader-brand-title {
@@ -210,7 +210,7 @@
   background: linear-gradient(90deg, #00D4FF, #3978FF);
   border-radius: 99px;
   box-shadow: 0 0 10px #00D4FF, 0 0 4px #FFFFFF;
-  animation: progressFill 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.75s forwards;
+  animation: progressFill 1.35s cubic-bezier(0.4, 0, 0.2, 1) 1.1s forwards;
 }
 
 /* KEYFRAMES */
