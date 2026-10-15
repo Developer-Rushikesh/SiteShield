@@ -15,7 +15,7 @@ export const LandingPage = () => {
   return (
     <div style={{ backgroundColor: 'var(--bg-primary)', minHeight: '100vh', color: 'var(--text-primary)', fontFamily: 'Inter, sans-serif' }}>
       {/* Premium Animated Logo Loader for SiteShield */}
-      {showLoader && <LogoLoader minDuration={3000} onFinish={() => setShowLoader(false)} />}
+      {showLoader && <LogoLoader minDuration={3800} onFinish={() => setShowLoader(false)} />}
 
       {/* 1. Header / Navbar */}
       <header

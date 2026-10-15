@@ -2,32 +2,30 @@ import React, { useEffect, useState } from 'react';
 import './LogoLoader.css';
 import logoImg from '../../images/logo.png';
 
-export const LogoLoader = ({ onFinish, minDuration = 3000 }) => {
+export const LogoLoader = ({ onFinish, minDuration = 3800 }) => {
   const [isFading, setIsFading] = useState(false);
 
   useEffect(() => {
-    // Check if user prefers reduced motion
-    const prefersReducedMotion =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Lock body scroll while loader is displaying
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
 
-    const fadeTimeout = setTimeout(
-      () => {
-        setIsFading(true);
-      },
-      prefersReducedMotion ? 300 : Math.max(minDuration - 500, 0)
-    );
+    // Fade starts 550ms before completion
+    const fadeDelay = Math.max(minDuration - 550, 0);
 
-    const finishTimeout = setTimeout(
-      () => {
-        if (onFinish) onFinish();
-      },
-      prefersReducedMotion ? 500 : minDuration
-    );
+    const fadeTimeout = setTimeout(() => {
+      setIsFading(true);
+      document.body.style.overflow = originalOverflow;
+    }, fadeDelay);
+
+    const finishTimeout = setTimeout(() => {
+      if (onFinish) onFinish();
+    }, minDuration);
 
     return () => {
       clearTimeout(fadeTimeout);
       clearTimeout(finishTimeout);
+      document.body.style.overflow = originalOverflow;
     };
   }, [minDuration, onFinish]);
 
