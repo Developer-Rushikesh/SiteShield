@@ -10,6 +10,25 @@ export const authService = {
     return response.data;
   },
 
+  sendRegisterOtp: async (email, name = '') => {
+    const response = await api.post('/auth/send-register-otp/', { email, name });
+    return response.data;
+  },
+
+  verifyRegisterOtp: async (name, email, password, otp) => {
+    const response = await api.post('/auth/verify-register-otp/', { name, email, password, otp });
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  },
+
+  resendRegisterOtp: async (email, name = '') => {
+    const response = await api.post('/auth/resend-register-otp/', { email, name });
+    return response.data;
+  },
+
   register: async (name, email, password) => {
     const response = await api.post('/auth/register/', { name, email, password });
     if (response.data.token) {

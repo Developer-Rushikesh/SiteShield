@@ -57,6 +57,45 @@ export const projectService = {
   deleteProject: async (id) => {
     const response = await api.delete(`/projects/${id}/`);
     return response.data;
+  },
+
+  // Daily 9:00 PM Report Scheduling
+  getReportSchedule: async () => {
+    const response = await api.get('/projects/report-schedule/');
+    return response.data;
+  },
+
+  updateReportSchedule: async (data) => {
+    const response = await api.post('/projects/report-schedule/', data);
+    return response.data;
+  },
+
+  testDailyReport: async (recipientEmail = '') => {
+    const response = await api.post('/projects/test-daily-report/', { recipient_email: recipientEmail });
+    return response.data;
+  },
+
+  // On-demand Analytical Reports
+  sendAnalyticsReport: async (reportPayload) => {
+    const response = await api.post('/projects/send-analytics-report/', reportPayload);
+    return response.data;
+  },
+
+  // On-demand Single Project Audit Report
+  sendProjectReport: async (projectId, data) => {
+    const response = await api.post(`/projects/${projectId}/send-report/`, data);
+    return response.data;
+  },
+
+  // Test Critical Red Alert Email Dispatch
+  testRedAlert: async (projectId = null, recipientEmail = '') => {
+    if (projectId) {
+      const response = await api.post(`/projects/${projectId}/test-red-alert/`, { recipient_email: recipientEmail });
+      return response.data;
+    } else {
+      const response = await api.post('/projects/test-red-alert/', { recipient_email: recipientEmail });
+      return response.data;
+    }
   }
 };
 

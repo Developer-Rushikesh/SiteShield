@@ -1,11 +1,12 @@
 import time
 from rest_framework import viewsets, permissions, status, exceptions
+from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Avg, Sum, Min, Max
 from django.utils import timezone
-from .models import Project
-from .serializers import ProjectSerializer
+from .models import Project, ReportSchedule, ReportEmailLog
+from .serializers import ProjectSerializer, ReportScheduleSerializer
 from monitors.models import Monitor, MonitoringRecord, Incident
 from monitors.serializers import MonitorSerializer, MonitoringRecordSerializer, IncidentSerializer
 from monitors.services.monitoring_service import check_website, validate_url_security
@@ -52,6 +53,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
         check_interval = int(request.data.get('check_interval', 5))
         timeout_val = int(request.data.get('timeout', 10))
         monitor_name = request.data.get('name', '').strip() or f"{project.name} HTTP"
+        alert_email = request.data.get('alert_email', None)
+
+        if alert_email is not None:
+            project.alert_email = alert_email.strip()
+            project.save(update_fields=['alert_email'])
 
         monitor = project.monitors.first()
         if monitor:
@@ -309,3 +315,174 @@ class ProjectViewSet(viewsets.ModelViewSet):
         incidents = Incident.objects.filter(monitor__project=project).order_by('-started_at')
         serializer = IncidentSerializer(incidents, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='send-report')
+    def send_report(self, request, pk=None):
+        """
+        Sends an on-demand audit report for this project to a specified email address.
+        """
+        project = self.get_object()
+        recipient = request.data.get('email', '').strip() or request.data.get('recipient_email', '').strip()
+        notes = request.data.get('notes', '').strip()
+
+        if not recipient:
+            recipient = request.user.email
+
+        if not recipient or '@' not in recipient:
+            return Response({'error': 'A valid destination email address is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            from .services.email_report_service import send_project_report_email
+            send_project_report_email(user=request.user, project=project, recipient_email=recipient, notes=notes)
+            return Response({
+                'message': f"Performance report for '{project.name}' successfully sent to {recipient}!",
+                'recipient': recipient
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': f'Failed to send report email: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=['post'], url_path='test-red-alert')
+    def test_red_alert(self, request, pk=None):
+        """
+        Dispatches a simulated Red Alert outage email to test emergency alert delivery for this project.
+        """
+        project = self.get_object()
+        recipient = request.data.get('email', '').strip() or request.data.get('recipient_email', '').strip() or project.get_alert_recipient_email()
+        if not recipient or '@' not in recipient:
+            return Response({'error': 'A valid recipient email address is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            from .services.email_report_service import send_test_red_alert_email
+            success, info = send_test_red_alert_email(project=project, user=request.user, recipient_email=recipient)
+            if success:
+                return Response({
+                    'message': f"🚨 Test Red Alert outage email successfully dispatched to {info}!",
+                    'recipient': info
+                }, status=status.HTTP_200_OK)
+            return Response({'error': f"Failed to dispatch test red alert: {info}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response({'error': f"Error dispatching test alert: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ReportScheduleView(APIView):
+    """
+    Manages user preferences for the daily 9:00 PM email performance report.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        schedule, _ = ReportSchedule.objects.get_or_create(user=request.user)
+        serializer = ReportScheduleSerializer(schedule)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        schedule, _ = ReportSchedule.objects.get_or_create(user=request.user)
+        serializer = ReportScheduleSerializer(schedule, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'message': 'Daily 9 PM report schedule preferences updated successfully!',
+                'schedule': serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request):
+        return self.post(request)
+
+
+class TestDailyReportView(APIView):
+    """
+    Immediately compiles and sends a test Daily 9:00 PM report to verify email delivery.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        schedule, _ = ReportSchedule.objects.get_or_create(user=request.user)
+        custom_recipient = request.data.get('recipient_email', '').strip()
+        if custom_recipient:
+            schedule.recipient_email = custom_recipient
+            schedule.save()
+
+        try:
+            from .services.email_report_service import send_daily_summary_report
+            success, msg = send_daily_summary_report(schedule, force=True)
+            if success:
+                return Response({
+                    'message': msg,
+                    'recipient': schedule.get_effective_email()
+                }, status=status.HTTP_200_OK)
+            return Response({'error': msg}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': f'Failed to send daily report: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class SendAnalyticsReportView(APIView):
+    """
+    Sends an analytical report covering multiple projects or specific project to any email.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        recipient = request.data.get('email', '').strip() or request.data.get('recipient_email', '').strip() or request.user.email
+        if not recipient or '@' not in recipient:
+            return Response({'error': 'A valid recipient email address is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        project_id = request.data.get('project_id', 'ALL')
+        from_date = request.data.get('from_date')
+        to_date = request.data.get('to_date')
+        notes = request.data.get('notes', '')
+
+        try:
+            from .services.email_report_service import send_analytics_report_email
+            send_analytics_report_email(
+                user=request.user,
+                recipient_email=recipient,
+                project_id=project_id,
+                from_date=from_date,
+                to_date=to_date,
+                notes=notes
+            )
+            return Response({
+                'message': f"Analytical performance report was successfully dispatched to {recipient}!",
+                'recipient': recipient
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': f'Failed to send analytical report email: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class TestRedAlertView(APIView):
+    """
+    Immediately compiles and dispatches a test Red Alert email to verify emergency outage notifications.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        project_id = request.data.get('project_id')
+        project = None
+        if project_id and str(project_id).upper() != 'ALL':
+            try:
+                project = Project.objects.get(id=project_id, user=request.user)
+            except Project.DoesNotExist:
+                pass
+
+        recipient = request.data.get('recipient_email', '').strip() or request.data.get('email', '').strip()
+        if not recipient and project:
+            recipient = project.get_alert_recipient_email()
+        if not recipient:
+            recipient = request.user.report_schedule.recipient_email if hasattr(request.user, 'report_schedule') and request.user.report_schedule.recipient_email else request.user.email
+
+        if not recipient or '@' not in recipient:
+            return Response({'error': 'A valid recipient email address is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            from .services.email_report_service import send_test_red_alert_email
+            success, info = send_test_red_alert_email(project=project, user=request.user, recipient_email=recipient)
+            if success:
+                return Response({
+                    'message': f"🚨 Test Red Alert outage email was successfully dispatched to {info}!",
+                    'recipient': info
+                }, status=status.HTTP_200_OK)
+            return Response({'error': f"Failed to dispatch test red alert: {info}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response({'error': f"Failed to send red alert test: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

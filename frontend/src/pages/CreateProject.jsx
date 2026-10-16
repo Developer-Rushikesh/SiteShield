@@ -12,6 +12,7 @@ export const CreateProject = () => {
   const [url, setUrl] = useState('');
   const [checkInterval, setCheckInterval] = useState(5);
   const [timeout, setTimeoutVal] = useState(10);
+  const [alertEmail, setAlertEmail] = useState('');
   const [alertDown, setAlertDown] = useState(true);
   const [alertRecovered, setAlertRecovered] = useState(true);
   const [alertSlow, setAlertSlow] = useState(true);
@@ -30,6 +31,7 @@ export const CreateProject = () => {
         name,
         description,
         url,
+        alert_email: alertEmail.trim(),
         check_interval: parseInt(checkInterval),
         timeout: parseInt(timeout)
       });
@@ -107,6 +109,23 @@ export const CreateProject = () => {
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://example.com"
             />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span style={{ color: '#ef4444' }}>🚨</span>
+              <span>Particular Red Alert Email (Optional)</span>
+            </label>
+            <input
+              type="email"
+              className="form-input"
+              value={alertEmail}
+              onChange={(e) => setAlertEmail(e.target.value)}
+              placeholder="e.g. oncall-alerts@company.com"
+            />
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>
+              Specify a particular email to receive instant emergency Red Alert notifications if this website goes DOWN. (Defaults to your account email if left blank).
+            </span>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

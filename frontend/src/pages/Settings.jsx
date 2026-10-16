@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Save, User, Bell, Sliders, Check, Key, Smartphone, MessageSquare, Mail, AlertTriangle, ShieldCheck, Clock, LogOut, RefreshCw } from 'lucide-react';
+import { Save, User, Bell, Sliders, Check, Key, Smartphone, MessageSquare, Mail, AlertTriangle, ShieldCheck, Clock, LogOut, RefreshCw, Send, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
+import { projectService } from '../services/projectService';
 
 export const Settings = () => {
   const { user, setUser, logout } = useAuth();
@@ -43,6 +44,113 @@ export const Settings = () => {
 
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [alertEmail, setAlertEmail] = useState('alerts@example.com');
+
+  // Daily 9:00 PM Email Report Schedule States
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [sendDownAlerts, setSendDownAlerts] = useState(true);
+  const [scheduleEmail, setScheduleEmail] = useState('');
+  const [includeAllProjects, setIncludeAllProjects] = useState(true);
+  const [selectedProjectIds, setSelectedProjectIds] = useState([]);
+  const [availableProjects, setAvailableProjects] = useState([]);
+  const [lastReportSentAt, setLastReportSentAt] = useState(null);
+  const [savingSchedule, setSavingSchedule] = useState(false);
+  const [testingSchedule, setTestingSchedule] = useState(false);
+  const [scheduleFeedback, setScheduleFeedback] = useState(null);
+
+  // Red Alert Outage States
+  const [testingRedAlert, setTestingRedAlert] = useState(false);
+  const [redAlertFeedback, setRedAlertFeedback] = useState(null);
+
+  useEffect(() => {
+    const fetchScheduleData = async () => {
+      try {
+        const [sched, projs] = await Promise.all([
+          projectService.getReportSchedule(),
+          projectService.getProjects()
+        ]);
+        if (sched) {
+          setScheduleEnabled(sched.is_enabled);
+          setSendDownAlerts(sched.send_down_alerts ?? true);
+          setScheduleEmail(sched.recipient_email || '');
+          if (sched.recipient_email) setAlertEmail(sched.recipient_email);
+          setIncludeAllProjects(sched.include_all_projects);
+          setSelectedProjectIds(sched.selected_projects?.map(p => p.id) || []);
+          setLastReportSentAt(sched.last_sent_at);
+        }
+        setAvailableProjects(projs || []);
+      } catch (err) {
+        console.error("Failed to load daily report schedule:", err);
+      }
+    };
+    fetchScheduleData();
+  }, []);
+
+  const handleSaveSchedule = async () => {
+    setSavingSchedule(true);
+    setScheduleFeedback(null);
+    try {
+      const res = await projectService.updateReportSchedule({
+        is_enabled: scheduleEnabled,
+        send_down_alerts: sendDownAlerts,
+        recipient_email: scheduleEmail,
+        include_all_projects: includeAllProjects,
+        selected_project_ids: selectedProjectIds
+      });
+      setScheduleFeedback({
+        type: 'success',
+        message: 'Daily 9:00 PM report schedule preferences saved successfully!'
+      });
+      setTimeout(() => setScheduleFeedback(null), 4000);
+    } catch (err) {
+      setScheduleFeedback({
+        type: 'error',
+        message: err.response?.data?.error || err.message || 'Failed to save daily report schedule.'
+      });
+    } finally {
+      setSavingSchedule(false);
+    }
+  };
+
+  const handleTestDailyReport = async () => {
+    setTestingSchedule(true);
+    setScheduleFeedback(null);
+    try {
+      const res = await projectService.testDailyReport(scheduleEmail);
+      setScheduleFeedback({
+        type: 'success',
+        message: res.message || `Test daily 9 PM report dispatched successfully to ${res.recipient}!`
+      });
+      setTimeout(() => setScheduleFeedback(null), 5000);
+    } catch (err) {
+      setScheduleFeedback({
+        type: 'error',
+        message: err.response?.data?.error || err.message || 'Failed to dispatch test daily report.'
+      });
+    } finally {
+      setTestingSchedule(false);
+    }
+  };
+
+  const handleTestRedAlert = async () => {
+    setTestingRedAlert(true);
+    setRedAlertFeedback(null);
+    try {
+      const targetEmail = scheduleEmail || alertEmail || user?.email;
+      const res = await projectService.testRedAlert(null, targetEmail);
+      setRedAlertFeedback({
+        type: 'success',
+        message: res.message || `🚨 Test Red Alert outage email sent to ${res.recipient}!`
+      });
+      setTimeout(() => setRedAlertFeedback(null), 6000);
+    } catch (err) {
+      setRedAlertFeedback({
+        type: 'error',
+        message: err.response?.data?.error || err.message || 'Failed to dispatch test red alert.'
+      });
+    } finally {
+      setTestingRedAlert(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -447,11 +555,11 @@ export const Settings = () => {
               )}
             </div>
 
-            {/* Email Notifications */}
-            <div style={{ padding: '1rem', borderRadius: 'var(--radius-sm)', backgroundColor: '#ffffff', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {/* Email Notifications & Red Alert Outage Dispatch */}
+            <div style={{ padding: '1.25rem', borderRadius: 'var(--radius-sm)', backgroundColor: '#ffffff', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.95rem' }}>
-                  <Mail size={18} style={{ color: 'var(--accent-primary)' }} /> Email Alert Dispatch
+                  <Mail size={18} style={{ color: 'var(--accent-primary)' }} /> Email Alert & Red Alert Outage Dispatch
                 </div>
                 <label style={{ fontSize: '0.85rem', fontWeight: 600, color: emailEnabled ? 'var(--status-up)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                   <input
@@ -463,19 +571,318 @@ export const Settings = () => {
                   {emailEnabled ? 'Enabled' : 'Disabled'}
                 </label>
               </div>
+
               {emailEnabled && (
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" style={{ fontSize: '0.8rem' }}>Alert Recipient Email Address</label>
-                  <input
-                    type="email"
-                    className="form-input"
-                    value={alertEmail}
-                    onChange={(e) => setAlertEmail(e.target.value)}
-                    placeholder="alerts@example.com"
-                  />
-                </div>
+                <>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600 }}>Default Alert Recipient Email Address</label>
+                    <input
+                      type="email"
+                      className="form-input"
+                      value={alertEmail}
+                      onChange={(e) => {
+                        setAlertEmail(e.target.value);
+                        if (!scheduleEmail) setScheduleEmail(e.target.value);
+                      }}
+                      placeholder="alerts@example.com"
+                    />
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>
+                      Primary destination email for downtime alerts and system notifications.
+                    </span>
+                  </div>
+
+                  <div style={{ padding: '0.85rem 1rem', borderRadius: '6px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <div>
+                      <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#991b1b', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span>🚨</span> Critical Red Alert Outage Emails (When Website Goes DOWN)
+                      </div>
+                      <div style={{ fontSize: '0.775rem', color: '#7f1d1d', marginTop: '0.2rem' }}>
+                        Dispatches immediate high-urgency Red Alert email when any monitored website endpoint goes down.
+                      </div>
+                    </div>
+                    <label style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', gap: '0.4rem', fontSize: '0.825rem', fontWeight: 700, color: sendDownAlerts ? '#dc2626' : 'var(--text-muted)' }}>
+                      <input
+                        type="checkbox"
+                        style={{ width: '18px', height: '18px', accentColor: '#dc2626' }}
+                        checked={sendDownAlerts}
+                        onChange={(e) => setSendDownAlerts(e.target.checked)}
+                      />
+                      {sendDownAlerts ? 'Active' : 'Muted'}
+                    </label>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      disabled={testingRedAlert}
+                      onClick={handleTestRedAlert}
+                      className="btn btn-secondary"
+                      style={{ fontSize: '0.825rem', padding: '0.5rem 0.95rem', color: '#b91c1c', borderColor: '#fca5a5', backgroundColor: '#fff1f2', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                      title="Send a sample Red Alert email to test delivery"
+                    >
+                      <AlertTriangle size={14} className={testingRedAlert ? "spin" : ""} />
+                      {testingRedAlert ? 'Sending Red Alert...' : '🚨 Send Test Red Alert Email Now'}
+                    </button>
+                  </div>
+
+                  {redAlertFeedback && (
+                    <div
+                      style={{
+                        padding: '0.7rem 0.9rem',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: redAlertFeedback.type === 'success' ? '#fef2f2' : 'var(--status-down-bg)',
+                        border: redAlertFeedback.type === 'success' ? '1px solid #fecaca' : '1px solid var(--status-down)',
+                        color: redAlertFeedback.type === 'success' ? '#991b1b' : 'var(--status-down)',
+                        fontSize: '0.825rem',
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      {redAlertFeedback.type === 'success' ? <CheckCircle2 size={15} color="#dc2626" /> : <AlertTriangle size={15} />}
+                      <span>{redAlertFeedback.message}</span>
+                    </div>
+                  )}
+                </>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* 5. Daily 9:00 PM Automated Email Reports */}
+        <div className="card" style={{ border: scheduleEnabled ? '1px solid #93c5fd' : '1px solid var(--border-color)', backgroundColor: '#ffffff' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.85rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '8px', backgroundColor: '#eff6ff', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Mail size={22} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                  Automated Daily 9:00 PM Performance Report
+                </h3>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  Dispatches a comprehensive nightly website availability audit directly to your designated email.
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  padding: '0.25rem 0.65rem',
+                  borderRadius: '9999px',
+                  backgroundColor: scheduleEnabled ? 'var(--status-up-bg)' : '#f1f5f9',
+                  color: scheduleEnabled ? 'var(--status-up)' : 'var(--text-muted)'
+                }}
+              >
+                {scheduleEnabled ? '● Daily 9:00 PM Active' : '○ Disabled'}
+              </span>
+            </div>
+          </div>
+
+          {/* Feedback Alert */}
+          {scheduleFeedback && (
+            <div
+              style={{
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: scheduleFeedback.type === 'success' ? 'var(--status-up-bg)' : 'var(--status-down-bg)',
+                color: scheduleFeedback.type === 'success' ? 'var(--status-up)' : 'var(--status-down)',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                marginBottom: '1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              {scheduleFeedback.type === 'success' ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+              <span>{scheduleFeedback.message}</span>
+            </div>
+          )}
+
+          {/* Enable Toggle Box */}
+          <div
+            style={{
+              padding: '1rem',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: scheduleEnabled ? 'rgba(59, 130, 246, 0.04)' : '#f8fafc',
+              border: '1px solid ' + (scheduleEnabled ? '#bfdbfe' : 'var(--border-color)'),
+              marginBottom: '1.25rem',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}
+          >
+            <div>
+              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                Enable Daily Nightly Report (9:00 PM IST)
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                When enabled, SiteShield 24 Monitor compiles all synthetic uptime & latency logs and emails the report every day at 21:00.
+              </div>
+            </div>
+            <label style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                style={{ width: '22px', height: '22px', accentColor: 'var(--accent-primary)', cursor: 'pointer' }}
+                checked={scheduleEnabled}
+                onChange={(e) => setScheduleEnabled(e.target.checked)}
+              />
+            </label>
+          </div>
+
+          {/* Configuration Fields */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
+            {/* Particular Recipient Email */}
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">
+                Target Recipient Email Address
+              </label>
+              <input
+                type="email"
+                className="form-input"
+                value={scheduleEmail}
+                onChange={(e) => setScheduleEmail(e.target.value)}
+                placeholder={user?.email || 'e.g. devops-lead@company.com'}
+              />
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.3rem' }}>
+                Specify any particular email address for the daily 9 PM digest. (Defaults to <strong>{user?.email || 'your account email'}</strong> if blank).
+              </span>
+            </div>
+
+            {/* Schedule Details Badge */}
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Execution Time & Timezone</label>
+              <div
+                style={{
+                  padding: '0.65rem 0.85rem',
+                  borderRadius: 'var(--radius-sm)',
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid var(--border-color)',
+                  fontSize: '0.85rem',
+                  color: 'var(--text-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <Clock size={16} color="var(--accent-primary)" />
+                <span>Daily at <strong>9:00 PM (21:00) IST</strong></span>
+              </div>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.3rem' }}>
+                {lastReportSentAt
+                  ? `Last report was dispatched on: ${new Date(lastReportSentAt).toLocaleString()}`
+                  : 'Automated nightly trigger via SiteShield background scheduler.'}
+              </span>
+            </div>
+          </div>
+
+          {/* Scope Selector */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label className="form-label">Included Monitored Projects</label>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.875rem', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                <input
+                  type="radio"
+                  name="includeProjects"
+                  checked={includeAllProjects}
+                  onChange={() => setIncludeAllProjects(true)}
+                  style={{ accentColor: 'var(--accent-primary)' }}
+                />
+                All Monitored Projects ({availableProjects.length})
+              </label>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.875rem', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                <input
+                  type="radio"
+                  name="includeProjects"
+                  checked={!includeAllProjects}
+                  onChange={() => setIncludeAllProjects(false)}
+                  style={{ accentColor: 'var(--accent-primary)' }}
+                />
+                Select Specific Projects
+              </label>
+            </div>
+
+            {!includeAllProjects && (
+              <div
+                style={{
+                  maxHeight: '160px',
+                  overflowY: 'auto',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '0.75rem',
+                  backgroundColor: '#f8fafc',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gap: '0.5rem'
+                }}
+              >
+                {availableProjects.map((p) => {
+                  const isChecked = selectedProjectIds.includes(p.id);
+                  return (
+                    <label key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.825rem', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedProjectIds([...selectedProjectIds, p.id]);
+                          } else {
+                            setSelectedProjectIds(selectedProjectIds.filter((id) => id !== p.id));
+                          }
+                        }}
+                        style={{ accentColor: 'var(--accent-primary)' }}
+                      />
+                      <span style={{ fontWeight: 600 }}>{p.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons for Schedule */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                disabled={testingSchedule}
+                onClick={handleTestDailyReport}
+                className="btn btn-secondary"
+                style={{ padding: '0.55rem 1rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#1d4ed8', borderColor: '#93c5fd', backgroundColor: '#eff6ff' }}
+                title="Compile and dispatch the 9 PM report immediately to verify email delivery"
+              >
+                <Send size={14} className={testingSchedule ? "spin" : ""} />
+                {testingSchedule ? 'Sending Test 9 PM Report...' : 'Send Test 9 PM Report Now'}
+              </button>
+
+              <button
+                type="button"
+                disabled={testingRedAlert}
+                onClick={handleTestRedAlert}
+                className="btn btn-secondary"
+                style={{ padding: '0.55rem 1rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#b91c1c', borderColor: '#fca5a5', backgroundColor: '#fff1f2', fontWeight: 600 }}
+                title="Dispatch a sample Red Alert email to test outage alerting"
+              >
+                <AlertTriangle size={14} className={testingRedAlert ? "spin" : ""} />
+                {testingRedAlert ? 'Sending Red Alert...' : '🚨 Test Red Alert Outage'}
+              </button>
+            </div>
+
+            <button
+              type="button"
+              disabled={savingSchedule}
+              onClick={handleSaveSchedule}
+              className="btn btn-primary"
+              style={{ padding: '0.55rem 1.25rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              <Save size={15} />
+              {savingSchedule ? 'Saving Schedule...' : 'Save Daily Report Schedule'}
+            </button>
           </div>
         </div>
 

@@ -11,6 +11,7 @@ export const EditProject = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [url, setUrl] = useState('');
+  const [alertEmail, setAlertEmail] = useState('');
   const [isActive, setIsActive] = useState(true);
 
   const [loading, setLoading] = useState(true);
@@ -24,6 +25,7 @@ export const EditProject = () => {
         setName(p.name || '');
         setDescription(p.description || '');
         setUrl(p.website_url || p.url || '');
+        setAlertEmail(p.alert_email || '');
         setIsActive(p.is_active ?? true);
       } catch (e) {
         setError('Failed to load project details.');
@@ -44,6 +46,7 @@ export const EditProject = () => {
         name,
         description,
         url,
+        alert_email: alertEmail.trim(),
         is_active: isActive
       });
       navigate(`/projects/${id}`);
@@ -105,6 +108,23 @@ export const EditProject = () => {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
             />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span style={{ color: '#ef4444' }}>🚨</span>
+              <span>Particular Red Alert Email (Dispatched When Website Goes DOWN)</span>
+            </label>
+            <input
+              type="email"
+              className="form-input"
+              placeholder="e.g. oncall-alerts@company.com"
+              value={alertEmail}
+              onChange={(e) => setAlertEmail(e.target.value)}
+            />
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>
+              Designated email to immediately receive emergency Red Alert notifications if this website goes DOWN. (Defaults to your account email if blank).
+            </span>
           </div>
 
           <div className="form-group">

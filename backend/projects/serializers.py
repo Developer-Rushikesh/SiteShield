@@ -26,7 +26,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = [
-            'id', 'name', 'description', 'is_active', 'created_at', 'updated_at',
+            'id', 'name', 'description', 'alert_email', 'is_active', 'created_at', 'updated_at',
             'url', 'check_interval', 'timeout', 'monitor_id',
             'monitors_count', 'healthy_count', 'down_count', 'status',
             'uptime', 'average_response_time', 'latest_response_time',
@@ -196,4 +196,43 @@ class ProjectSerializer(serializers.ModelSerializer):
             score += 10
         score -= (incidents_count * 15)
         return max(0, min(100, int(score)))
+
+
+class ReportScheduleSerializer(serializers.ModelSerializer):
+    selected_project_ids = serializers.ListField(
+        child=serializers.IntegerField(), write_only=True, required=False
+    )
+    effective_email = serializers.SerializerMethodField()
+    selected_projects = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Project.report_schedule.related.related_model if hasattr(Project, 'report_schedule') else None
+        # We will reference ReportSchedule directly
+        fields = [
+            'id', 'is_enabled', 'send_down_alerts', 'recipient_email', 'scheduled_time',
+            'include_all_projects', 'selected_projects', 'selected_project_ids',
+            'last_sent_at', 'effective_email', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'last_sent_at', 'created_at', 'updated_at', 'selected_projects']
+
+    def __init__(self, *args, **kwargs):
+        from .models import ReportSchedule
+        self.Meta.model = ReportSchedule
+        super().__init__(*args, **kwargs)
+
+    def get_effective_email(self, obj):
+        return obj.get_effective_email()
+
+    def get_selected_projects(self, obj):
+        return [{'id': p.id, 'name': p.name} for p in obj.selected_projects.all()]
+
+    def update(self, instance, validated_data):
+        selected_ids = validated_data.pop('selected_project_ids', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if selected_ids is not None:
+            projects = Project.objects.filter(user=instance.user, id__in=selected_ids)
+            instance.selected_projects.set(projects)
+        return instance
 

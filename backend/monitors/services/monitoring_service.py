@@ -163,6 +163,14 @@ def _record_and_update(monitor: Monitor, status: str, http_code: int, response_t
                     title=f"Website Down: {monitor.name}",
                     message=f"'{monitor.name}' ({monitor.url}) is currently DOWN. Reason: {error_msg or 'HTTP Failure'}"
                 )
+
+                # Dispatch Immediate RED ALERT Email
+                try:
+                    from projects.services.email_report_service import send_red_alert_down_email
+                    send_red_alert_down_email(monitor, record, incident)
+                except Exception as email_err:
+                    print(f"[SiteShield Alert] Error dispatching Red Alert email for {monitor.name}:", email_err)
+
         elif status in ['UP', 'WARNING']:
             if open_incident:
                 # Resolve active incident
@@ -182,6 +190,13 @@ def _record_and_update(monitor: Monitor, status: str, http_code: int, response_t
                     title=f"Website Recovered: {monitor.name}",
                     message=f"'{monitor.name}' ({monitor.url}) has recovered and is back online. Response time: {response_time_ms}ms"
                 )
+
+                # Dispatch Recovery Email
+                try:
+                    from projects.services.email_report_service import send_alert_recovered_email
+                    send_alert_recovered_email(monitor, record, open_incident)
+                except Exception as email_err:
+                    print(f"[SiteShield Alert] Error dispatching recovery email for {monitor.name}:", email_err)
 
             # Throttle slow response notifications
             if status == 'WARNING':

@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import {
   RefreshCw, ExternalLink, ArrowLeft, ShieldCheck, Clock,
   AlertTriangle, Plus, Download, Globe, Settings, CheckCircle2,
-  AlertCircle, Activity, Server, Radio
+  AlertCircle, Activity, Server, Radio, Mail, Send, X
 } from 'lucide-react';
 import StatusBadge from '../components/common/StatusBadge';
 import HealthScore from '../components/common/HealthScore';
@@ -16,8 +16,10 @@ import LoadingState from '../components/common/LoadingState';
 import ErrorState from '../components/common/ErrorState';
 import { projectService } from '../services/projectService';
 import { exportElementToPdf } from '../utils/pdfGenerator';
+import { useAuth } from '../context/AuthContext';
 
 export const ProjectDetail = () => {
+  const { user } = useAuth();
   const { id } = useParams();
 
   const [project, setProject] = useState(null);
@@ -30,6 +32,9 @@ export const ProjectDetail = () => {
   const [configUrl, setConfigUrl] = useState('');
   const [configInterval, setConfigInterval] = useState(5);
   const [configTimeout, setConfigTimeout] = useState(10);
+  const [configAlertEmail, setConfigAlertEmail] = useState('');
+  const [testingRedAlert, setTestingRedAlert] = useState(false);
+  const [redAlertFeedback, setRedAlertFeedback] = useState(null);
   const [savingConfig, setSavingConfig] = useState(false);
   const [configError, setConfigError] = useState('');
   const [configSuccess, setConfigSuccess] = useState('');
@@ -49,6 +54,51 @@ export const ProjectDetail = () => {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [error, setError] = useState(null);
   const [authError, setAuthError] = useState(false);
+
+  // Email Report Modal States
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailRecipient, setEmailRecipient] = useState(user?.email || '');
+  const [emailNotes, setEmailNotes] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailFeedback, setEmailFeedback] = useState(null);
+
+  useEffect(() => {
+    if (user?.email && !emailRecipient) {
+      setEmailRecipient(user.email);
+    }
+  }, [user]);
+
+  const handleSendProjectEmail = async (e) => {
+    e.preventDefault();
+    if (!emailRecipient || !emailRecipient.includes('@')) {
+      setEmailFeedback({ type: 'error', message: 'Please enter a valid recipient email address.' });
+      return;
+    }
+    setSendingEmail(true);
+    setEmailFeedback(null);
+    try {
+      const res = await projectService.sendProjectReport(id, {
+        email: emailRecipient,
+        notes: emailNotes
+      });
+      setEmailFeedback({
+        type: 'success',
+        message: res.message || `Project audit successfully emailed to ${emailRecipient}!`
+      });
+      setTimeout(() => {
+        setShowEmailModal(false);
+        setEmailFeedback(null);
+        setEmailNotes('');
+      }, 2500);
+    } catch (err) {
+      setEmailFeedback({
+        type: 'error',
+        message: err.response?.data?.error || err.response?.data?.detail || err.message || 'Failed to email project audit.'
+      });
+    } finally {
+      setSendingEmail(false);
+    }
+  };
 
   const autoRefreshRef = useRef(null);
 
@@ -72,6 +122,10 @@ export const ProjectDetail = () => {
       setStats(statsData);
       setHistory(histData || []);
       setIncidents(incData || []);
+
+      if (projData?.alert_email) {
+        setConfigAlertEmail(projData.alert_email);
+      }
 
       if (statsData?.target_url || projData?.website_url) {
         setConfigUrl(statsData?.target_url || projData?.website_url || '');
@@ -123,6 +177,26 @@ export const ProjectDetail = () => {
     }
   };
 
+  const handleTestRedAlert = async () => {
+    setTestingRedAlert(true);
+    setRedAlertFeedback(null);
+    try {
+      const res = await projectService.testRedAlert(id, configAlertEmail);
+      setRedAlertFeedback({
+        type: 'success',
+        message: res.message || `Test Red Alert outage email sent to ${res.recipient}!`
+      });
+      setTimeout(() => setRedAlertFeedback(null), 6000);
+    } catch (err) {
+      setRedAlertFeedback({
+        type: 'error',
+        message: err.response?.data?.error || err.message || 'Failed to dispatch test red alert.'
+      });
+    } finally {
+      setTestingRedAlert(false);
+    }
+  };
+
   const handleSaveConfig = async (e) => {
     e.preventDefault();
     setConfigError('');
@@ -133,9 +207,10 @@ export const ProjectDetail = () => {
       await projectService.configureProjectMonitor(id, {
         url: configUrl,
         check_interval: parseInt(configInterval),
-        timeout: parseInt(configTimeout)
+        timeout: parseInt(configTimeout),
+        alert_email: configAlertEmail.trim()
       });
-      setConfigSuccess("Target URL configured successfully! Initial health check recorded.");
+      setConfigSuccess("Target URL and Red Alert email configured successfully! Initial health check recorded.");
       setShowConfig(false);
       await loadData(false);
     } catch (err) {
@@ -255,6 +330,43 @@ export const ProjectDetail = () => {
               {autoRefresh ? "Live Sync ON" : "Auto Refresh"}
             </button>
 
+            {/* Email Report Button */}
+            <button
+              onClick={() => {
+                if (!emailRecipient && user?.email) setEmailRecipient(user.email);
+                setEmailFeedback(null);
+                setShowEmailModal(true);
+              }}
+              className="btn btn-secondary"
+              style={{ fontSize: '0.85rem', padding: '0.55rem 0.9rem', color: '#1d4ed8', borderColor: '#93c5fd', backgroundColor: '#eff6ff', fontWeight: 600 }}
+              title="Send real-time health audit to email"
+            >
+              <Mail size={15} />
+              Email Report
+            </button>
+
+            {/* Test Red Alert Button */}
+            <button
+              onClick={handleTestRedAlert}
+              disabled={testingRedAlert}
+              className="btn btn-secondary"
+              style={{
+                fontSize: '0.85rem',
+                padding: '0.55rem 0.9rem',
+                color: '#b91c1c',
+                borderColor: '#fca5a5',
+                backgroundColor: '#fef2f2',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem'
+              }}
+              title="Dispatch a sample Red Alert email to test outage notifications"
+            >
+              <AlertTriangle size={15} style={{ animation: testingRedAlert ? 'spin 1s linear infinite' : 'none' }} />
+              {testingRedAlert ? 'Sending Alert...' : '🚨 Test Red Alert'}
+            </button>
+
             {/* Configure URL Button */}
             <button
               onClick={() => setShowConfig(!showConfig)}
@@ -278,6 +390,27 @@ export const ProjectDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Red Alert Test Feedback Banner */}
+      {redAlertFeedback && (
+        <div
+          style={{
+            padding: '0.85rem 1.25rem',
+            borderRadius: 'var(--radius-sm)',
+            backgroundColor: redAlertFeedback.type === 'success' ? '#fef2f2' : 'var(--status-down-bg)',
+            border: redAlertFeedback.type === 'success' ? '1px solid #fecaca' : '1px solid var(--status-down)',
+            color: redAlertFeedback.type === 'success' ? '#991b1b' : 'var(--status-down)',
+            fontSize: '0.875rem',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.6rem'
+          }}
+        >
+          {redAlertFeedback.type === 'success' ? <CheckCircle2 size={18} color="#dc2626" /> : <AlertCircle size={18} />}
+          <span>{redAlertFeedback.message}</span>
+        </div>
+      )}
 
       {/* Target URL Setup / Edit Section (Collapse / Expand) */}
       {(showConfig || !hasTargetUrl) && (
@@ -388,6 +521,40 @@ export const ProjectDetail = () => {
                   </>
                 )}
               </button>
+            </div>
+
+            {/* Particular Red Alert Email Field */}
+            <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span style={{ color: '#ef4444' }}>🚨</span>
+                  <span>Particular Red Alert Email (Dispatched Immediately When Website Goes DOWN)</span>
+                </label>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <input
+                    type="email"
+                    className="form-input"
+                    style={{ fontSize: '0.875rem', flex: 1, minWidth: '240px' }}
+                    value={configAlertEmail}
+                    onChange={(e) => setConfigAlertEmail(e.target.value)}
+                    placeholder={user?.email || 'e.g. devops-lead@company.com'}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleTestRedAlert}
+                    disabled={testingRedAlert}
+                    className="btn btn-secondary"
+                    style={{ fontSize: '0.825rem', padding: '0.55rem 0.9rem', color: '#b91c1c', borderColor: '#fca5a5', backgroundColor: '#fef2f2' }}
+                    title="Send sample Red Alert email to test this address"
+                  >
+                    <AlertTriangle size={14} />
+                    {testingRedAlert ? 'Testing...' : 'Test Red Alert Delivery'}
+                  </button>
+                </div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.35rem' }}>
+                  Emergency outage notification address designated specifically for this website. (Defaults to your account email: <strong>{user?.email}</strong> if blank).
+                </span>
+              </div>
             </div>
           </form>
         </div>
@@ -605,6 +772,177 @@ export const ProjectDetail = () => {
         </div>
         <IncidentTable incidents={incidents} />
       </div>
+
+      {/* Send Project Report to Email Modal */}
+      {showEmailModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.5rem'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !sendingEmail) setShowEmailModal(false);
+          }}
+        >
+          <div
+            className="card"
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '14px',
+              maxWidth: '520px',
+              width: '100%',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
+              border: '1px solid #bfdbfe',
+              overflow: 'hidden',
+              padding: 0
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+                padding: '1.5rem 1.75rem',
+                color: '#ffffff',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                  <Mail size={20} />
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>
+                    Email Project Health Audit
+                  </h3>
+                </div>
+                <p style={{ fontSize: '0.825rem', color: '#dbeafe', margin: 0 }}>
+                  Dispatches real-time availability & latency metrics for '{project.name}'
+                </p>
+              </div>
+              <button
+                onClick={() => !sendingEmail && setShowEmailModal(false)}
+                disabled={sendingEmail}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  border: 'none',
+                  color: '#ffffff',
+                  borderRadius: '6px',
+                  width: '30px',
+                  height: '30px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer'
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleSendProjectEmail} style={{ padding: '1.75rem' }}>
+              {emailFeedback && (
+                <div
+                  style={{
+                    padding: '0.75rem 1rem',
+                    borderRadius: 'var(--radius-sm)',
+                    backgroundColor: emailFeedback.type === 'success' ? 'var(--status-up-bg)' : 'var(--status-down-bg)',
+                    color: emailFeedback.type === 'success' ? 'var(--status-up)' : 'var(--status-down)',
+                    fontSize: '0.85rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    marginBottom: '1.25rem'
+                  }}
+                >
+                  {emailFeedback.type === 'success' ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+                  <span>{emailFeedback.message}</span>
+                </div>
+              )}
+
+              {/* Snapshot Summary Box */}
+              <div
+                style={{
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  padding: '0.85rem 1rem',
+                  fontSize: '0.825rem',
+                  color: 'var(--text-secondary)',
+                  marginBottom: '1.25rem',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '0.5rem'
+                }}
+              >
+                <div><strong>Project:</strong> {project.name}</div>
+                <div><strong>Target:</strong> <span style={{ color: 'var(--accent-primary)' }}>{targetUrl || 'N/A'}</span></div>
+                <div><strong>Current Status:</strong> <span style={{ color: currentStatus === 'UP' ? 'var(--status-up)' : 'var(--status-down)', fontWeight: 700 }}>{currentStatus}</span></div>
+                <div><strong>Uptime:</strong> {uptimeVal}% ({avgRespTime} ms)</div>
+              </div>
+
+              {/* Destination Email Input */}
+              <div className="form-group">
+                <label className="form-label">
+                  Recipient Email Address <span style={{ color: 'var(--status-down)' }}>*</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  className="form-input"
+                  value={emailRecipient}
+                  onChange={(e) => setEmailRecipient(e.target.value)}
+                  placeholder="name@company.com"
+                />
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>
+                  The audit report will be dispatched immediately via SiteShield Google SMTP.
+                </span>
+              </div>
+
+              {/* Optional Notes */}
+              <div className="form-group">
+                <label className="form-label">Attached Notes / Comments (Optional)</label>
+                <textarea
+                  className="form-input"
+                  rows={3}
+                  value={emailNotes}
+                  onChange={(e) => setEmailNotes(e.target.value)}
+                  placeholder="Add notes for the recipient (e.g., reason for audit, maintenance schedule)..."
+                  style={{ resize: 'vertical' }}
+                />
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
+                <button
+                  type="button"
+                  disabled={sendingEmail}
+                  onClick={() => setShowEmailModal(false)}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={sendingEmail}
+                  className="btn btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                >
+                  <Send size={16} />
+                  {sendingEmail ? 'Sending Email...' : 'Send Project Report'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

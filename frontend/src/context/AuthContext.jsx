@@ -42,6 +42,17 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const sendRegisterOtp = async (email, name) => {
+    return await authService.sendRegisterOtp(email, name);
+  };
+
+  const verifyRegisterOtp = async (name, email, password, otp) => {
+    const data = await authService.verifyRegisterOtp(name, email, password, otp);
+    setToken(data.token);
+    setUser(data.user);
+    return data;
+  };
+
   const register = async (name, email, password) => {
     const data = await authService.register(name, email, password);
     setToken(data.token);
@@ -66,6 +77,8 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         register,
+        sendRegisterOtp,
+        verifyRegisterOtp,
         logout,
         setUser
       }}
