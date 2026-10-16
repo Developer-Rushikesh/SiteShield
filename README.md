@@ -196,3 +196,30 @@ In production environments requiring continuous background checking across thous
 cd backend
 python manage.py test
 ```
+
+---
+
+## ☁️ Production Deployment Guide (Vercel + Render)
+
+### 1. Deploy Backend on Render
+1. In Render Dashboard, click **New +** > **Blueprint**.
+2. Select your repository `Developer-Rushikesh/SiteShield`.
+3. Render reads `render.yaml` automatically to configure the Python Web Service and PostgreSQL database.
+4. Input environment variables:
+   - `EMAIL_HOST_USER`: `rushikeshpawar977@gmail.com`
+   - `EMAIL_HOST_PASSWORD`: `<your-app-password>`
+5. Click **Apply**.
+6. Copy your deployed backend service URL: `https://<your-app>.onrender.com`.
+
+### 2. Deploy Frontend on Vercel
+1. In Vercel Dashboard, click **Add New...** > **Project**.
+2. Import `Developer-Rushikesh/SiteShield`.
+3. In Project Configuration:
+   - **Framework Preset**: `Vite`
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+4. Set Environment Variable:
+   - `VITE_API_BASE_URL`: `https://<your-backend-app>.onrender.com/api`
+5. Click **Deploy**.
+
