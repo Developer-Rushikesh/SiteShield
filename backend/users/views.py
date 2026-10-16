@@ -40,11 +40,16 @@ class SendRegisterOTPView(APIView):
 
         otp_obj = EmailOTP.generate_otp(email, purpose='REGISTER')
 
+        # Log OTP to server console so it can be viewed in Render logs even if SMTP is blocked
+        print(f"[SiteShield OTP] Verification code for {email}: {otp_obj.otp_code}", flush=True)
+
         try:
             send_otp_email(to_email=email, otp_code=otp_obj.otp_code, purpose='REGISTER', user_name=name)
         except Exception as e:
+            err_msg = str(e)
+            print(f"[SiteShield OTP Error] Could not send email via SMTP: {err_msg}", flush=True)
             return Response({
-                'detail': f'Failed to send verification email: {str(e)}'
+                'detail': f'Failed to send verification email: {err_msg}. Note: Render Free Tier blocks outbound SMTP; check Render logs for your OTP code or configure a third-party email provider.'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({
