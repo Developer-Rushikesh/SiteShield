@@ -1,3 +1,5 @@
+import logging
+import os
 from datetime import datetime
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
@@ -6,6 +8,35 @@ from django.db.models import Avg, Sum
 from projects.models import Project, ReportSchedule, ReportEmailLog
 from monitors.models import Monitor, MonitoringRecord, Incident
 from notifications.models import Notification
+from users.email_service import send_brevo_transactional_email
+
+logger = logging.getLogger(__name__)
+
+
+def dispatch_report_email(recipient, subject, html_content, plain_text="", display_name="User"):
+    """
+    Dispatches report and alert emails using the Brevo HTTP API (HTTPS port 443) when configured,
+    or falls back to standard Django EmailBackend when Brevo credentials are not configured.
+    """
+    api_key = getattr(settings, 'BREVO_API_KEY', '') or os.getenv('BREVO_API_KEY', '')
+    sender_email = getattr(settings, 'BREVO_SENDER_EMAIL', '') or os.getenv('BREVO_SENDER_EMAIL', '')
+
+    if api_key and sender_email:
+        logger.info(f"[SiteShield Email Report] Sending report email to recipient via Brevo HTTP API")
+        return send_brevo_transactional_email(
+            to_email=recipient,
+            subject=subject,
+            html_content=html_content,
+            plain_text=plain_text,
+            display_name=display_name
+        )
+    else:
+        logger.info(f"[SiteShield Email Report] Sending report email to recipient via Django EmailBackend")
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'SiteShield 24 Monitor <noreply@siteshield.io>')
+        msg = EmailMultiAlternatives(subject, plain_text, from_email, [recipient])
+        msg.attach_alternative(html_content, "text/html")
+        msg.send(fail_silently=False)
+        return True
 
 
 def build_kpi_card(title, value, subtitle, bg_color="#eff6ff", text_color="#1e40af", border_color="#bfdbfe"):
@@ -235,10 +266,13 @@ PROJECTS:
     for p in project_stats_list:
         plain_text += f"\n- {p['name']} ({p['url']}): Status={p['status']}, Uptime={p['uptime']}%, Latency={p['avg_resp']}ms"
 
-    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'SiteShield 24 Monitor <rushikeshpawar977@gmail.com>')
-    msg = EmailMultiAlternatives(subject, plain_text, from_email, [recipient])
-    msg.attach_alternative(html_content, "text/html")
-    msg.send(fail_silently=False)
+    dispatch_report_email(
+        recipient=recipient,
+        subject=subject[:250],
+        html_content=html_content,
+        plain_text=plain_text,
+        display_name=user.get_full_name() or user.username
+    )
 
     # Update schedule & log
     schedule.last_sent_at = timezone.now()
@@ -358,29 +392,45 @@ def send_project_report_email(user, project: Project, recipient_email: str, note
 
     plain_text = f"SiteShield 24 Monitor — Project Audit: {project.name}\nStatus: {stats['status']}\nUptime: {stats['uptime']}%\nLatency: {stats['avg_resp']}ms\nTarget URL: {stats['url']}"
 
-    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'SiteShield 24 Monitor <rushikeshpawar977@gmail.com>')
-    msg = EmailMultiAlternatives(subject, plain_text, from_email, [recipient])
-    msg.attach_alternative(html_content, "text/html")
-    msg.send(fail_silently=False)
+    try:
+        dispatch_report_email(
+            recipient=recipient,
+            subject=subject[:250],
+            html_content=html_content,
+            plain_text=plain_text,
+            display_name=user.get_full_name() or user.username
+        )
 
-    ReportEmailLog.objects.create(
-        user=user,
-        recipient_email=recipient,
-        report_type='PROJECT_AUDIT',
-        subject=subject,
-        project=project,
-        status='SENT'
-    )
+        ReportEmailLog.objects.create(
+            user=user,
+            recipient_email=recipient,
+            report_type='PROJECT_AUDIT',
+            subject=subject[:255],
+            project=project,
+            status='SENT'
+        )
 
-    Notification.objects.create(
-        user=user,
-        project=project,
-        type='SYSTEM',
-        title=f"Report Dispatched for {project.name}",
-        message=f"Performance audit for '{project.name}' was successfully emailed to {recipient}."
-    )
+        Notification.objects.create(
+            user=user,
+            project=project,
+            type='SYSTEM',
+            title=f"Report Dispatched for {project.name}",
+            message=f"Performance audit for '{project.name}' was successfully emailed to {recipient}."
+        )
 
-    return True
+        return True
+    except Exception as exc:
+        logger.error(f"[SiteShield Reports Error] Failed sending project report: {str(exc)}")
+        ReportEmailLog.objects.create(
+            user=user,
+            recipient_email=recipient,
+            report_type='PROJECT_AUDIT',
+            subject=subject[:255],
+            project=project,
+            status='FAILED',
+            error_message=str(exc)[:500]
+        )
+        raise
 
 
 def send_analytics_report_email(user, recipient_email: str, project_id=None, from_date=None, to_date=None, notes=""):
@@ -485,10 +535,13 @@ def send_analytics_report_email(user, recipient_email: str, project_id=None, fro
 
     plain_text = f"SiteShield 24 Monitor — Analytical Report ({date_label})\nUptime: {overall_uptime}%\nAvg Latency: {overall_avg_resp}ms\nProjects: {total_projects}"
 
-    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'SiteShield 24 Monitor <rushikeshpawar977@gmail.com>')
-    msg = EmailMultiAlternatives(subject, plain_text, from_email, [recipient])
-    msg.attach_alternative(html_content, "text/html")
-    msg.send(fail_silently=False)
+    dispatch_report_email(
+        recipient=recipient,
+        subject=subject[:250],
+        html_content=html_content,
+        plain_text=plain_text,
+        display_name=user.get_full_name() or user.username
+    )
 
     ReportEmailLog.objects.create(
         user=user,
@@ -655,11 +708,14 @@ Dashboard: {project_link}
 SiteShield 24 Monitor Emergency Alert System
     """.strip()
 
-    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'SiteShield 24 Monitor <rushikeshpawar977@gmail.com>')
     try:
-        msg = EmailMultiAlternatives(subject, plain_text, from_email, [recipient])
-        msg.attach_alternative(html_content, "text/html")
-        msg.send(fail_silently=False)
+        dispatch_report_email(
+            recipient=recipient,
+            subject=subject[:250],
+            html_content=html_content,
+            plain_text=plain_text,
+            display_name=user.get_full_name() or user.username if user else "SiteShield Admin"
+        )
 
         real_project = project if (hasattr(project, 'pk') and project.pk) else None
         real_user = user if (hasattr(user, 'pk') and user.pk) else None
@@ -807,11 +863,14 @@ def send_alert_recovered_email(monitor, record, incident=None):
     """
     plain_text = f"✅ [RESOLVED] Website Back Online: {project.name}\nURL: {monitor.url}\nDowntime: {duration_mins} mins\nLatency: {record.response_time}ms"
 
-    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'SiteShield 24 Monitor <rushikeshpawar977@gmail.com>')
     try:
-        msg = EmailMultiAlternatives(subject, plain_text, from_email, [recipient])
-        msg.attach_alternative(html_content, "text/html")
-        msg.send(fail_silently=False)
+        dispatch_report_email(
+            recipient=recipient,
+            subject=subject[:250],
+            html_content=html_content,
+            plain_text=plain_text,
+            display_name=user.get_full_name() or user.username if user else "SiteShield Admin"
+        )
 
         ReportEmailLog.objects.create(
             user=user,

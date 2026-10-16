@@ -1,8 +1,10 @@
+import logging
 import time
 from rest_framework import viewsets, permissions, status, exceptions
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.conf import settings
 from django.db.models import Avg, Sum, Min, Max
 from django.utils import timezone
 from .models import Project, ReportSchedule, ReportEmailLog
@@ -10,6 +12,8 @@ from .serializers import ProjectSerializer, ReportScheduleSerializer
 from monitors.models import Monitor, MonitoringRecord, Incident
 from monitors.serializers import MonitorSerializer, MonitoringRecordSerializer, IncidentSerializer
 from monitors.services.monitoring_service import check_website, validate_url_security
+
+logger = logging.getLogger(__name__)
 
 class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
@@ -27,8 +31,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
             if project.user != self.request.user and not self.request.user.is_staff:
                 raise exceptions.PermissionDenied("You do not have authorization to access this project.")
             return project
-        except Project.DoesNotExist:
-            raise exceptions.NotFound(f"Project with ID {pk} not found.")
+        except (Project.DoesNotExist, ValueError):
+            raise exceptions.NotFound(f"Project with ID '{pk}' not found.")
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -322,14 +326,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
         Sends an on-demand audit report for this project to a specified email address.
         """
         project = self.get_object()
-        recipient = request.data.get('email', '').strip() or request.data.get('recipient_email', '').strip()
-        notes = request.data.get('notes', '').strip()
+        data = request.data if isinstance(request.data, dict) else {}
+        recipient = (data.get('email') or data.get('recipient_email') or '').strip()
+        notes = (data.get('notes') or '').strip()
 
         if not recipient:
-            recipient = request.user.email
+            recipient = (request.user.email or '').strip()
 
-        if not recipient or '@' not in recipient:
+        if not recipient or '@' not in recipient or '.' not in recipient.split('@')[-1]:
             return Response({'error': 'A valid destination email address is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        logger.info(f"[SiteShield Reports] Request to send project audit report for project ID {project.id} ('{project.name}')")
 
         try:
             from .services.email_report_service import send_project_report_email
@@ -339,7 +346,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 'recipient': recipient
             }, status=status.HTTP_200_OK)
         except Exception as e:
-            return Response({'error': f'Failed to send report email: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            err_msg = str(e)
+            api_key = getattr(settings, 'BREVO_API_KEY', '')
+            if api_key and api_key in err_msg:
+                err_msg = err_msg.replace(api_key, "[REDACTED]")
+
+            logger.error(f"[SiteShield Reports Error] Error sending report for project ID {project.id}: {err_msg}")
+            return Response({'error': f'Failed to send report email: {err_msg}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=True, methods=['post'], url_path='test-red-alert')
     def test_red_alert(self, request, pk=None):
