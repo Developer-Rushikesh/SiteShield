@@ -38,8 +38,6 @@ export const Dashboard = () => {
   if (loading) return <LoadingState message="Loading application health & metrics..." />;
   if (error) return <ErrorState message={error} onRetry={fetchDashboard} />;
 
-  const greetingName = user?.first_name || user?.name || user?.username || 'User';
-
   const topProjectsData = (summary.projects || []).slice(0, 2).map(p => ({
     label: p.name,
     detail: p.status,
@@ -72,24 +70,24 @@ export const Dashboard = () => {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem', width: '100%' }}>
       {/* Header Banner */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+          <h2 style={{ fontSize: 'clamp(1.3rem, 3.5vw, 1.7rem)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.2 }}>
             System Monitoring & Health Dashboard ⚡
           </h2>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
             Real-time status, uptime tracking, and multi-domain analysis.
           </p>
         </div>
-        <Link to="/projects/new" className="btn btn-primary">
+        <Link to="/projects/new" className="btn btn-primary" style={{ flexShrink: 0 }}>
           <Plus size={18} /> Add New Project
         </Link>
       </div>
 
       {/* Top Stat Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+      <div className="stats-grid-responsive">
         <StatCard title="Total Projects" value={summary.total_projects} icon={FolderKanban} color="var(--accent-primary)" topData={topProjectsData} />
         <StatCard title="Total Web Running" value={totalRunningCount} icon={Activity} color="var(--accent-primary)" topData={topRunningData} />
         <StatCard title="Healthy Web" value={summary.healthy_websites} icon={CheckCircle2} color="var(--status-up)" topData={topHealthyData} />
@@ -99,7 +97,7 @@ export const Dashboard = () => {
       </div>
 
       {/* Charts Section */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+      <div className="charts-grid-responsive">
         <div className="card">
           <h3 style={{ fontSize: '1.05rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--text-primary)' }}>
             Average Response Time (ms)
@@ -117,8 +115,8 @@ export const Dashboard = () => {
 
       {/* Projects Overview Grid */}
       <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)' }}>
             Active Projects ({summary.projects ? summary.projects.length : 0})
           </h3>
           <Link to="/projects" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
@@ -129,7 +127,7 @@ export const Dashboard = () => {
         {!summary.projects || summary.projects.length === 0 ? (
           <EmptyState title="No projects added yet" description="Add your first web application to start monitoring response times and availability." />
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
+          <div className="projects-grid-responsive">
             {summary.projects.map((project) => (
               <ProjectCard key={project.id} project={project} />
             ))}

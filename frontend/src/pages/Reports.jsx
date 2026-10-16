@@ -168,7 +168,7 @@ export const Reports = () => {
             Filter by project, date, and time range to export graphical PDF reports or email audits directly.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <div className="project-actions-group">
           <button
             onClick={() => {
               if (!emailRecipient && user?.email) setEmailRecipient(user.email);
@@ -198,7 +198,7 @@ export const Reports = () => {
           <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>Report Filter Options</h3>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: '1.25rem' }}>
           {/* Project Selector */}
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Select Target Project</label>
@@ -234,7 +234,7 @@ export const Reports = () => {
           {/* Date Range Inputs */}
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">From Date & To Date</label>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div className="date-inputs-flex">
               <input
                 type="date"
                 className="form-input"
@@ -269,21 +269,9 @@ export const Reports = () => {
       </div>
 
       {/* Downloadable Graphical Report Structure */}
-      <div
-        id="report-content-area"
-        style={{
-          backgroundColor: '#ffffff',
-          border: '1px solid var(--border-color)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '2.5rem',
-          boxShadow: 'var(--shadow-md)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '2rem'
-        }}
-      >
+      <div id="report-content-area" className="report-content-card">
         {/* PDF Header Branding with SiteShield Logo */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid var(--accent-primary)', paddingBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', borderBottom: '2px solid var(--accent-primary)', paddingBottom: '1.5rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '0.4rem' }}>
               <img src={logoImg} alt="SiteShield Logo" style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
@@ -355,7 +343,7 @@ export const Reports = () => {
           <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1rem' }}>
             Graphical Analysis & Trends
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '1.5rem' }}>
+          <div className="charts-grid-responsive">
             <div style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '1.25rem', backgroundColor: '#ffffff' }}>
               <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1rem' }}>
                 Latency Trend (ms)
@@ -428,34 +416,12 @@ export const Reports = () => {
       {/* Send Report to Email Modal */}
       {showEmailModal && (
         <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.65)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1.5rem'
-          }}
+          className="modal-overlay"
           onClick={(e) => {
             if (e.target === e.currentTarget && !sendingEmail) setShowEmailModal(false);
           }}
         >
-          <div
-            className="card"
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '14px',
-              maxWidth: '520px',
-              width: '100%',
-              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
-              border: '1px solid #bfdbfe',
-              overflow: 'hidden',
-              padding: 0
-            }}
-          >
+          <div className="modal-responsive-card">
             {/* Modal Header */}
             <div
               style={{

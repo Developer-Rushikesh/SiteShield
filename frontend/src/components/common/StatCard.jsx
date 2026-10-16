@@ -57,7 +57,7 @@ export const StatCard = ({ title, value, subtext, icon: Icon, color = 'var(--acc
             bottom: '105%',
             left: '50%',
             transform: 'translateX(-50%)',
-            width: '240px',
+            width: 'min(240px, calc(100vw - 32px))',
             backgroundColor: '#ffffff',
             border: '1px solid #bfdbfe',
             borderRadius: 'var(--radius-md)',

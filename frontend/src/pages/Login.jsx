@@ -56,10 +56,10 @@ export const Login = () => {
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: 'var(--bg-primary)',
-        padding: '1.5rem'
+        padding: '1rem'
       }}
     >
-      <div className="card" style={{ width: '100%', maxWidth: '420px', padding: '2.5rem' }}>
+      <div className="card auth-card">
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div
             style={{

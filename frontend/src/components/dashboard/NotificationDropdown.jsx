@@ -15,9 +15,9 @@ export const NotificationDropdown = ({ notifications = [], onMarkRead, onMarkAll
       style={{
         position: 'absolute',
         top: '100%',
-        right: 0,
+        right: '-10px',
         marginTop: '0.5rem',
-        width: '360px',
+        width: 'min(360px, calc(100vw - 24px))',
         maxHeight: '480px',
         backgroundColor: 'var(--bg-secondary)',
         border: '1px solid var(--border-color)',

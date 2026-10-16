@@ -99,7 +99,7 @@ export const Projects = () => {
             Manage and view health statistics for all monitored environments.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <button
             onClick={() => fetchProjects(true)}
             className="btn btn-secondary"
@@ -114,8 +114,8 @@ export const Projects = () => {
       </div>
 
       {/* Filter and Search */}
-      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: 1, maxWidth: '360px' }}>
+      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', width: '100%' }}>
+        <div style={{ position: 'relative', width: '100%', maxWidth: '380px' }}>
           <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input
             type="text"
@@ -233,34 +233,12 @@ export const Projects = () => {
       {/* Quick Email Modal */}
       {emailModalProject && (
         <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.65)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1.5rem'
-          }}
+          className="modal-overlay"
           onClick={(e) => {
             if (e.target === e.currentTarget && !sendingEmail) setEmailModalProject(null);
           }}
         >
-          <div
-            className="card"
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '12px',
-              maxWidth: '460px',
-              width: '100%',
-              padding: 0,
-              overflow: 'hidden',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.25)',
-              border: '1px solid #bfdbfe'
-            }}
-          >
+          <div className="modal-responsive-card">
             <div
               style={{
                 background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',

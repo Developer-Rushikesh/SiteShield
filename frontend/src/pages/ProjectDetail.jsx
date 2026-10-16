@@ -312,7 +312,7 @@ export const ProjectDetail = () => {
           </div>
 
           {/* Action Bar */}
-          <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="project-actions-group">
             {/* Auto Refresh Toggle */}
             <button
               onClick={() => setAutoRefresh(!autoRefresh)}
@@ -458,7 +458,7 @@ export const ProjectDetail = () => {
           )}
 
           <form onSubmit={handleSaveConfig}>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div className="config-form-grid">
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600 }}>Target Website URL *</label>
                 <input
@@ -561,7 +561,7 @@ export const ProjectDetail = () => {
       )}
 
       {/* Top Real-time Metrics Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+      <div className="stats-grid-responsive">
         {/* 1. Real Uptime */}
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -659,7 +659,7 @@ export const ProjectDetail = () => {
       </div>
 
       {/* Health Score & Status Timeline */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 1fr) 2fr', gap: '1.5rem', alignItems: 'stretch' }}>
+      <div className="health-score-timeline-grid">
         <HealthScore score={healthScore} />
         <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <StatusTimeline timeline={stats?.timeline || []} />
@@ -667,7 +667,7 @@ export const ProjectDetail = () => {
       </div>
 
       {/* Interactive Charts Section (Recharts) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '1.5rem' }}>
+      <div className="charts-grid-responsive">
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
@@ -776,34 +776,12 @@ export const ProjectDetail = () => {
       {/* Send Project Report to Email Modal */}
       {showEmailModal && (
         <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.65)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1.5rem'
-          }}
+          className="modal-overlay"
           onClick={(e) => {
             if (e.target === e.currentTarget && !sendingEmail) setShowEmailModal(false);
           }}
         >
-          <div
-            className="card"
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '14px',
-              maxWidth: '520px',
-              width: '100%',
-              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
-              border: '1px solid #bfdbfe',
-              overflow: 'hidden',
-              padding: 0
-            }}
-          >
+          <div className="modal-responsive-card">
             {/* Modal Header */}
             <div
               style={{

@@ -44,19 +44,21 @@ export const Navbar = ({ title = "Dashboard", onMenuClick }) => {
   return (
     <header
       style={{
-        height: '70px',
+        minHeight: '64px',
         backgroundColor: 'var(--bg-secondary)',
         borderBottom: '1px solid var(--border-color)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 1.5rem',
+        padding: '0 1.25rem',
         position: 'sticky',
         top: 0,
-        zIndex: 90
+        zIndex: 90,
+        width: '100%',
+        boxSizing: 'border-box'
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0 }}>
         {onMenuClick && (
           <button
             onClick={onMenuClick}
@@ -67,21 +69,33 @@ export const Navbar = ({ title = "Dashboard", onMenuClick }) => {
               color: 'var(--text-primary)',
               cursor: 'pointer',
               display: 'none',
-              padding: '0.25rem'
+              padding: '0.35rem',
+              borderRadius: 'var(--radius-sm)',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
             aria-label="Toggle Navigation Menu"
           >
             <Menu size={22} />
           </button>
         )}
-        <h1 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+        <h1
+          className="navbar-title"
+          style={{
+            fontSize: '1.15rem',
+            fontWeight: 800,
+            color: 'var(--text-primary)',
+            margin: 0,
+            lineHeight: 1.2
+          }}
+        >
           {title}
         </h1>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-        {/* Search bar */}
-        <div style={{ position: 'relative', width: '220px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+        {/* Search bar (Responsive: hidden on mobile) */}
+        <div className="navbar-search-wrapper" style={{ position: 'relative', width: '220px' }}>
           <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input
             type="text"
@@ -99,11 +113,15 @@ export const Navbar = ({ title = "Dashboard", onMenuClick }) => {
               position: 'relative',
               background: 'none',
               border: 'none',
-              padding: '0.5rem',
+              padding: '0.45rem',
               color: 'var(--text-primary)',
               borderRadius: 'var(--radius-sm)',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
+            aria-label="View notifications"
           >
             <Bell size={20} />
             {unreadCount > 0 && (
@@ -139,13 +157,39 @@ export const Navbar = ({ title = "Dashboard", onMenuClick }) => {
           )}
         </div>
 
-        {/* User Profile Side Logout Button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: '0.75rem', borderLeft: '1px solid var(--border-color)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--accent-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+        {/* User Profile & Logout */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', paddingLeft: '0.65rem', borderLeft: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+            <div
+              title={user?.name || user?.email}
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--accent-primary)',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                flexShrink: 0
+              }}
+            >
               {user?.name ? user.name[0].toUpperCase() : (user?.email ? user.email[0].toUpperCase() : 'U')}
             </div>
-            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span
+              className="navbar-user-name"
+              style={{
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                color: 'var(--text-primary)',
+                maxWidth: '120px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
               {user?.name || user?.email?.split('@')[0] || 'User'}
             </span>
           </div>
@@ -153,11 +197,12 @@ export const Navbar = ({ title = "Dashboard", onMenuClick }) => {
           <button
             onClick={handleLogout}
             title="Log Out Account"
+            className="navbar-logout-btn"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '0.35rem',
-              padding: '0.4rem 0.75rem',
+              padding: '0.4rem 0.65rem',
               backgroundColor: 'rgba(239, 68, 68, 0.08)',
               color: '#ef4444',
               border: '1px solid rgba(239, 68, 68, 0.2)',
@@ -165,13 +210,14 @@ export const Navbar = ({ title = "Dashboard", onMenuClick }) => {
               fontSize: '0.8rem',
               fontWeight: 600,
               cursor: 'pointer',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
+              minHeight: '32px'
             }}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#ef4444'; e.currentTarget.style.color = '#ffffff'; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.08)'; e.currentTarget.style.color = '#ef4444'; }}
           >
             <LogOut size={14} />
-            <span>Logout</span>
+            <span className="navbar-logout-text">Logout</span>
           </button>
         </div>
       </div>

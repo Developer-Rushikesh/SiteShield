@@ -151,12 +151,12 @@ export const Register = () => {
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: 'var(--bg-primary)',
-        padding: '1.5rem'
+        padding: '1rem'
       }}
     >
-      <div className="card" style={{ width: '100%', maxWidth: '460px', padding: '2.5rem' }}>
+      <div className="card auth-card">
         {/* Step Indicator Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
           <div
             style={{
               width: '52px',
@@ -174,10 +174,10 @@ export const Register = () => {
             {step === 1 ? <Activity size={28} /> : <ShieldCheck size={30} />}
           </div>
 
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+          <h2 style={{ fontSize: '1.45rem', fontWeight: 700, color: 'var(--text-primary)' }}>
             {step === 1 ? 'Create Your Account' : 'Verify Your Email'}
           </h2>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
             {step === 1
               ? 'Start monitoring your web applications with real-time health intelligence.'
               : `Enter the 6-digit verification code sent to ${email}`}
@@ -185,15 +185,16 @@ export const Register = () => {
         </div>
 
         {/* Step Progress Pill */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
           <div
+            className="auth-step-pill"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '0.35rem',
               fontSize: '0.75rem',
               fontWeight: 700,
-              padding: '0.25rem 0.75rem',
+              padding: '0.25rem 0.65rem',
               borderRadius: '9999px',
               backgroundColor: step === 1 ? 'var(--accent-primary)' : 'var(--status-up-bg)',
               color: step === 1 ? '#ffffff' : 'var(--status-up)'
@@ -201,15 +202,16 @@ export const Register = () => {
           >
             {step > 1 ? <CheckCircle2 size={12} /> : '1'} Account Details
           </div>
-          <div style={{ width: '24px', height: '2px', backgroundColor: step === 2 ? 'var(--accent-primary)' : 'var(--border-color)' }} />
+          <div style={{ width: '16px', height: '2px', backgroundColor: step === 2 ? 'var(--accent-primary)' : 'var(--border-color)' }} />
           <div
+            className="auth-step-pill"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '0.35rem',
               fontSize: '0.75rem',
               fontWeight: 700,
-              padding: '0.25rem 0.75rem',
+              padding: '0.25rem 0.65rem',
               borderRadius: '9999px',
               backgroundColor: step === 2 ? 'var(--accent-primary)' : 'var(--bg-primary)',
               color: step === 2 ? '#ffffff' : 'var(--text-muted)'

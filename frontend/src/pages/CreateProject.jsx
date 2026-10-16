@@ -128,7 +128,7 @@ export const CreateProject = () => {
             </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="grid-two-cols-responsive">
             <div className="form-group">
               <label className="form-label">Monitoring Interval</label>
               <select className="form-select" value={checkInterval} onChange={(e) => setCheckInterval(e.target.value)}>

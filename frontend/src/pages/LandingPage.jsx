@@ -49,20 +49,20 @@ export const LandingPage = () => {
             </div>
           </div>
 
-          {/* Nav Links */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '2rem', fontSize: '0.9rem', fontWeight: 600 }}>
+          {/* Nav Links (Hidden on tablet/mobile) */}
+          <nav className="landing-nav-links" style={{ display: 'flex', alignItems: 'center', gap: '2rem', fontSize: '0.9rem', fontWeight: 600 }}>
             <a href="#about" style={{ color: 'var(--text-secondary)' }}>About</a>
             <a href="#why-us" style={{ color: 'var(--text-secondary)' }}>Why Choose Us</a>
             <a href="#features" style={{ color: 'var(--text-secondary)' }}>Features</a>
           </nav>
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
             <button onClick={handleRedirectDashboard} className="btn btn-secondary btn-sm" style={{ fontWeight: 600 }}>
-              <LogIn size={16} /> Sign In / Register
+              <LogIn size={15} /> <span>Sign In</span>
             </button>
             <button onClick={handleRedirectDashboard} className="btn btn-primary btn-sm">
-              Launch Dashboard <ArrowRight size={16} />
+              <span>Dashboard</span> <ArrowRight size={15} />
             </button>
           </div>
         </div>
@@ -90,21 +90,21 @@ export const LandingPage = () => {
           </div>
 
           {/* Main Hero Headline */}
-          <h1 style={{ fontSize: '2.8rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+          <h1 className="landing-hero-title" style={{ fontSize: 'clamp(2rem, 5vw, 2.8rem)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
             Monitor, Detect & Stay Ahead of <span style={{ color: 'var(--accent-primary)' }}>Website Downtime</span>.
           </h1>
 
           {/* Hero Subtitle */}
-          <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', maxWidth: '720px', lineHeight: 1.6 }}>
+          <p style={{ fontSize: 'clamp(0.95rem, 2.5vw, 1.1rem)', color: 'var(--text-secondary)', maxWidth: '720px', lineHeight: 1.6 }}>
             SiteShield delivers continuous automated uptime checks, latency graphs, WhatsApp/SMS/Email downtime alerts, and downloadable graphical PDF reports.
           </p>
 
           {/* CTA Buttons */}
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <button onClick={handleRedirectDashboard} className="btn btn-primary" style={{ padding: '0.85rem 1.8rem', fontSize: '1rem' }}>
+          <div className="landing-hero-actions" style={{ display: 'flex', gap: '0.85rem', marginTop: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button onClick={handleRedirectDashboard} className="btn btn-primary" style={{ padding: '0.85rem 1.6rem', fontSize: '0.95rem' }}>
               Go to Live Dashboard <ArrowRight size={18} />
             </button>
-            <button onClick={handleRedirectDashboard} className="btn btn-secondary" style={{ padding: '0.85rem 1.6rem', fontSize: '1rem' }}>
+            <button onClick={handleRedirectDashboard} className="btn btn-secondary" style={{ padding: '0.85rem 1.4rem', fontSize: '0.95rem' }}>
               <LogIn size={18} /> Access Direct Web App
             </button>
           </div>
@@ -133,7 +133,7 @@ export const LandingPage = () => {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '1rem' }}>
               <div style={{ padding: '1rem', backgroundColor: '#f8fafc', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
                 <span style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>Average System Uptime</span>
                 <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--status-up)', marginTop: '0.2rem' }}>99.98%</div>
@@ -163,7 +163,7 @@ export const LandingPage = () => {
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.5rem' }}>
             <div className="card" style={{ backgroundColor: '#ffffff' }}>
               <div style={{ width: '44px', height: '44px', borderRadius: 'var(--radius-sm)', backgroundColor: '#eff6ff', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
                 <ShieldCheck size={24} />
@@ -212,7 +212,7 @@ export const LandingPage = () => {
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.5rem' }}>
             {/* Feature 1 */}
             <div className="card" style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
               <div style={{ padding: '0.6rem', borderRadius: 'var(--radius-sm)', backgroundColor: '#eff6ff', color: 'var(--accent-primary)' }}>

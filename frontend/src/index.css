@@ -43,6 +43,12 @@
   padding: 0;
 }
 
+html, body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background-color: var(--bg-primary);
@@ -64,12 +70,18 @@ a:hover {
 button {
   cursor: pointer;
   font-family: inherit;
+  touch-action: manipulation;
 }
 
-/* Layout Utilities */
+/* ==========================================================================
+   Layout Utilities
+   ========================================================================== */
 .app-container {
   display: flex;
   min-height: 100vh;
+  width: 100%;
+  position: relative;
+  overflow-x: hidden;
 }
 
 .main-wrapper {
@@ -78,24 +90,22 @@ button {
   flex-direction: column;
   min-width: 0;
   background-color: var(--bg-primary);
+  width: 100%;
 }
 
 .main-content {
   flex: 1;
-  padding: 2rem;
+  padding: 1.75rem 2rem;
   overflow-y: auto;
-  max-width: 1400px;
+  max-width: 1440px;
   margin: 0 auto;
   width: 100%;
+  box-sizing: border-box;
 }
 
-@media (max-width: 768px) {
-  .main-content {
-    padding: 1rem;
-  }
-}
-
-/* Card Utility */
+/* ==========================================================================
+   Card Utility
+   ========================================================================== */
 .card {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -103,6 +113,8 @@ button {
   padding: 1.5rem;
   box-shadow: var(--shadow-sm);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .card:hover {
@@ -110,12 +122,15 @@ button {
   box-shadow: var(--shadow-md);
 }
 
-/* Form Styles */
+/* ==========================================================================
+   Form Styles
+   ========================================================================== */
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 1.25rem;
+  width: 100%;
 }
 
 .form-label {
@@ -134,14 +149,18 @@ button {
   font-size: 0.95rem;
   outline: none;
   transition: all 0.2s;
+  box-sizing: border-box;
+  min-height: 42px;
 }
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+  box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.15);
 }
 
-/* Button Variants */
+/* ==========================================================================
+   Button Variants
+   ========================================================================== */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -154,16 +173,18 @@ button {
   border: 1px solid transparent;
   transition: all 0.2s;
   cursor: pointer;
+  white-space: nowrap;
+  min-height: 40px;
 }
 
 .btn-primary {
   background-color: var(--accent-primary);
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 102, 255, 0.25);
 }
 .btn-primary:hover {
   background-color: var(--accent-hover);
-  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 102, 255, 0.35);
 }
 
 .btn-secondary {
@@ -186,11 +207,14 @@ button {
 }
 
 .btn-sm {
-  padding: 0.4rem 0.85rem;
+  padding: 0.45rem 0.85rem;
   font-size: 0.825rem;
+  min-height: 34px;
 }
 
-/* Table styling */
+/* ==========================================================================
+   Table Styling & Mobile Smooth Scrolling
+   ========================================================================== */
 .table-container {
   width: 100%;
   overflow-x: auto;
@@ -198,30 +222,49 @@ button {
   border: 1px solid var(--border-color);
   background-color: #ffffff;
   box-shadow: var(--shadow-sm);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Custom subtle scrollbar for tables */
+.table-container::-webkit-scrollbar {
+  height: 6px;
+}
+.table-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+.table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 table.data-table {
   width: 100%;
+  min-width: 650px; /* guarantees table columns maintain integrity on mobile */
   border-collapse: collapse;
   text-align: left;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
 table.data-table th {
   background-color: #f1f5f9;
   color: var(--text-primary);
   font-weight: 700;
-  padding: 0.9rem 1.1rem;
+  padding: 0.85rem 1rem;
   border-bottom: 1px solid var(--border-color);
   text-transform: uppercase;
-  font-size: 0.775rem;
+  font-size: 0.75rem;
   letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 
 table.data-table td {
-  padding: 1.05rem 1.1rem;
+  padding: 0.95rem 1rem;
   border-bottom: 1px solid var(--border-color);
   color: var(--text-primary);
+  vertical-align: middle;
 }
 
 table.data-table tr:last-child td {
@@ -232,13 +275,155 @@ table.data-table tr:hover td {
   background-color: #f8fafc;
 }
 
-/* Animations */
+/* ==========================================================================
+   Fluid Responsive Grid Utilities
+   ========================================================================== */
+/* Stats Grid (1 to 6 columns responsive) */
+.stats-grid-responsive {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 1.25rem;
+}
+
+/* Charts Grid (2 columns on large, 1 column on mobile/tablet) */
+.charts-grid-responsive {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 1.5rem;
+}
+
+/* Projects Grid */
+.projects-grid-responsive {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 1.25rem;
+}
+
+/* Two Columns Responsive */
+.grid-two-cols-responsive {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Health Score + Timeline Grid */
+.health-score-timeline-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 2fr;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+/* Project Detail Action Buttons Group */
+.project-actions-group {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Config Form Grid */
+.config-form-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+/* Date Range Inputs Box */
+.date-inputs-flex {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+/* Auth Card Utility */
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 2.5rem;
+  margin: 0 auto;
+}
+
+/* Report Content Card */
+.report-content-card {
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 2.25rem;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Modal Responsive Container */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+
+.modal-responsive-card {
+  background-color: #ffffff;
+  border-radius: 14px;
+  max-width: 520px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  border: 1px solid #bfdbfe;
+  overflow: hidden;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsive Media Queries */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1.2s linear infinite;
+}
+
+/* ==========================================================================
+   Comprehensive Media Queries
+   ========================================================================== */
+
+/* 1. Large Tablets & Small Laptops (<= 1024px) */
+@media (max-width: 1024px) {
+  .main-content {
+    padding: 1.5rem;
+  }
+
+  .charts-grid-responsive {
+    grid-template-columns: 1fr;
+  }
+
+  .health-score-timeline-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .config-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* 2. Tablets & Large Phones (<= 768px) */
 @media (max-width: 768px) {
   .mobile-menu-btn {
     display: inline-flex !important;
@@ -253,9 +438,11 @@ table.data-table tr:hover td {
     top: 0;
     left: 0;
     bottom: 0;
+    height: 100vh !important;
+    z-index: 999 !important;
     transform: translateX(-100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   }
 
   .sidebar-aside.mobile-open {
@@ -263,10 +450,157 @@ table.data-table tr:hover td {
   }
 
   .main-content {
-    padding: 1rem !important;
+    padding: 1.15rem !important;
   }
 
   .card {
-    padding: 1rem !important;
+    padding: 1.15rem !important;
+  }
+
+  .report-content-card {
+    padding: 1.25rem !important;
+  }
+
+  .landing-nav-links {
+    display: none !important;
+  }
+
+  .landing-hero-title {
+    font-size: clamp(2rem, 6vw, 2.8rem) !important;
+  }
+
+  .landing-hero-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .landing-hero-actions .btn {
+    width: 100%;
+  }
+}
+
+/* 3. Standard Mobile Phones (<= 640px) */
+@media (max-width: 640px) {
+  .main-content {
+    padding: 1rem 0.85rem !important;
+  }
+
+  /* Navbar Search shrinks/hides on small screens */
+  .navbar-search-wrapper {
+    display: none !important;
+  }
+
+  /* User profile hides name on small screen, leaves avatar */
+  .navbar-user-name {
+    display: none !important;
+  }
+
+  .stats-grid-responsive {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  .projects-grid-responsive {
+    grid-template-columns: 1fr !important;
+  }
+
+  .charts-grid-responsive {
+    grid-template-columns: 1fr !important;
+  }
+
+  .grid-two-cols-responsive {
+    grid-template-columns: 1fr !important;
+  }
+
+  .config-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .config-form-grid button {
+    width: 100%;
+  }
+
+  .project-actions-group {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .project-actions-group .btn-primary {
+    grid-column: span 2;
+  }
+
+  .date-inputs-flex {
+    flex-direction: column !important;
+  }
+
+  .auth-card {
+    padding: 1.75rem 1.25rem !important;
+  }
+
+  .modal-overlay {
+    padding: 0.75rem !important;
+  }
+}
+
+/* 4. Compact Mobile Devices (<= 480px) */
+@media (max-width: 480px) {
+  .main-content {
+    padding: 0.85rem 0.65rem !important;
+  }
+
+  .navbar-logout-text {
+    display: none !important;
+  }
+
+  .navbar-title {
+    font-size: 1.05rem !important;
+    max-width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stats-grid-responsive {
+    grid-template-columns: 1fr !important;
+    gap: 0.65rem !important;
+  }
+
+  .project-actions-group {
+    grid-template-columns: 1fr !important;
+  }
+
+  .project-actions-group .btn-primary {
+    grid-column: auto;
+  }
+
+  .btn {
+    font-size: 0.85rem;
+  }
+
+  .auth-card {
+    padding: 1.5rem 1rem !important;
+  }
+
+  /* Make sure step pill text doesn't overflow */
+  .auth-step-pill {
+    font-size: 0.7rem !important;
+    padding: 0.2rem 0.5rem !important;
+  }
+}
+
+/* 5. Ultra Compact Mobile Screens (<= 360px - Galaxy Fold cover, etc.) */
+@media (max-width: 360px) {
+  .main-content {
+    padding: 0.5rem !important;
+  }
+
+  .card {
+    padding: 0.85rem 0.65rem !important;
+  }
+
+  .navbar-title {
+    max-width: 110px;
   }
 }

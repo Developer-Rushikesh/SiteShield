@@ -100,15 +100,15 @@ export const Notifications = () => {
             >
               <div style={{ marginTop: '0.2rem' }}>{getIcon(n.type)}</div>
               <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <h4 style={{ fontSize: '1rem', fontWeight: n.is_read ? 500 : 700, color: 'var(--text-primary)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.35rem' }}>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: n.is_read ? 500 : 700, color: 'var(--text-primary)' }}>
                     {n.title}
                   </h4>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  <span style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>
                     {new Date(n.created_at).toLocaleString()}
                   </span>
                 </div>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.3rem' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.3rem' }}>
                   {n.message}
                 </p>
               </div>
@@ -116,7 +116,7 @@ export const Notifications = () => {
                 <button
                   onClick={() => handleMarkRead(n.id)}
                   className="btn btn-secondary btn-sm"
-                  style={{ alignSelf: 'center' }}
+                  style={{ alignSelf: 'flex-start', flexShrink: 0 }}
                 >
                   Mark read
                 </button>
