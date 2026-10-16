@@ -222,4 +222,3 @@ python manage.py test
 4. Set Environment Variable:
    - `VITE_API_BASE_URL`: `https://<your-backend-app>.onrender.com/api`
 5. Click **Deploy**.
-

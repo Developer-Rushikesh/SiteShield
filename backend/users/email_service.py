@@ -1,17 +1,99 @@
-from django.core.mail import EmailMultiAlternatives
+import logging
+import os
+import requests
 from django.conf import settings
-from django.utils.html import strip_tags
+
+logger = logging.getLogger(__name__)
+
+
+def send_brevo_transactional_email(to_email, subject, html_content, plain_text="", display_name="User"):
+    """
+    Sends a transactional email using the Brevo (Sendinblue) v3 HTTP API.
+    Uses HTTPS on port 443, which works reliably across all cloud environments including Render.
+    """
+    api_key = getattr(settings, 'BREVO_API_KEY', '') or os.getenv('BREVO_API_KEY', '')
+    sender_email = getattr(settings, 'BREVO_SENDER_EMAIL', '') or os.getenv('BREVO_SENDER_EMAIL', '')
+    sender_name = getattr(settings, 'BREVO_SENDER_NAME', 'SiteShield') or os.getenv('BREVO_SENDER_NAME', 'SiteShield')
+    api_url = getattr(settings, 'BREVO_API_URL', 'https://api.brevo.com/v3/smtp/email') or os.getenv('BREVO_API_URL', 'https://api.brevo.com/v3/smtp/email')
+    timeout = getattr(settings, 'BREVO_TIMEOUT', 10)
+
+    if not api_key:
+        raise ValueError("BREVO_API_KEY is not configured. Please set the BREVO_API_KEY environment variable.")
+
+    if not sender_email:
+        raise ValueError("BREVO_SENDER_EMAIL is not configured. Please set the BREVO_SENDER_EMAIL environment variable.")
+
+    headers = {
+        'accept': 'application/json',
+        'api-key': api_key.strip(),
+        'content-type': 'application/json',
+    }
+
+    recipient_name = (display_name or 'User').strip()
+    payload = {
+        'sender': {
+            'name': sender_name.strip(),
+            'email': sender_email.strip(),
+        },
+        'to': [
+            {
+                'email': to_email.strip(),
+                'name': recipient_name,
+            }
+        ],
+        'subject': subject,
+        'htmlContent': html_content,
+    }
+
+    if plain_text:
+        payload['textContent'] = plain_text
+
+    logger.info(f"[SiteShield] Sending transactional email to {to_email} via Brevo HTTP API")
+
+    try:
+        response = requests.post(api_url, json=payload, headers=headers, timeout=timeout)
+    except requests.exceptions.Timeout:
+        logger.error(f"[SiteShield] Brevo API request timed out after {timeout}s for recipient {to_email}")
+        raise RuntimeError(f"Email service request timed out after {timeout} seconds.")
+    except requests.exceptions.RequestException as exc:
+        logger.error(f"[SiteShield] Brevo API connection error for recipient {to_email}")
+        raise RuntimeError("Network error connecting to email service.")
+
+    # Check HTTP response status (Brevo v3 returns 201 Created on success)
+    if response.status_code not in (200, 201, 202):
+        err_msg = ""
+        try:
+            err_json = response.json()
+            err_msg = err_json.get('message', '')
+        except Exception:
+            err_msg = response.text or f"HTTP {response.status_code}"
+
+        # Ensure API key is never leaked in exception messages or logs
+        if api_key and api_key in err_msg:
+            err_msg = err_msg.replace(api_key, "[REDACTED]")
+
+        logger.error(f"[SiteShield] Brevo API error (status {response.status_code}): {err_msg}")
+        raise RuntimeError(f"Brevo API error ({response.status_code}): {err_msg}")
+
+    try:
+        data = response.json()
+    except Exception:
+        data = {'status': 'success'}
+
+    logger.info(f"[SiteShield] Transactional email successfully delivered to Brevo API for {to_email}")
+    return data
+
 
 def send_otp_email(to_email, otp_code, purpose="REGISTER", user_name=""):
     """
-    Sends a beautifully designed HTML OTP verification email to the user.
+    Generates the HTML & text email body and dispatches the OTP verification email
+    using Brevo's transactional email HTTP API.
     """
     subject_map = {
         'REGISTER': f"Your SiteShield Verification Code: {otp_code}",
         'RESET_PASSWORD': f"Password Reset Code: {otp_code}",
     }
     subject = subject_map.get(purpose, f"Your Verification Code: {otp_code}")
-
     display_name = user_name.strip() if user_name else "User"
 
     html_content = f"""
@@ -169,8 +251,14 @@ If you did not request this code, please ignore this email.
 SiteShield 24 Monitor
     """.strip()
 
-    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'SiteShield 24 Monitor <rushikeshpawar977@gmail.com>')
-    msg = EmailMultiAlternatives(subject, plain_text, from_email, [to_email])
-    msg.attach_alternative(html_content, "text/html")
-    msg.send(fail_silently=False)
-    return True
+    return send_brevo_transactional_email(
+        to_email=to_email,
+        subject=subject,
+        html_content=html_content,
+        plain_text=plain_text,
+        display_name=display_name
+    )
+
+
+# Alias for explicit imports
+send_brevo_otp_email = send_otp_email

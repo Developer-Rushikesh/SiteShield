@@ -1,3 +1,4 @@
+import logging
 from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -6,8 +7,10 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.utils import timezone
 from .models import EmailOTP
-from .email_service import send_otp_email
+from .email_service import send_otp_email, send_brevo_otp_email
 from .serializers import UserSerializer, RegisterSerializer, LoginSerializer
+
+logger = logging.getLogger(__name__)
 
 class SendRegisterOTPView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -40,16 +43,15 @@ class SendRegisterOTPView(APIView):
 
         otp_obj = EmailOTP.generate_otp(email, purpose='REGISTER')
 
-        # Log OTP to server console so it can be viewed in Render logs even if SMTP is blocked
-        print(f"[SiteShield OTP] Verification code for {email}: {otp_obj.otp_code}", flush=True)
+        logger.info(f"[SiteShield OTP] Sending registration verification code to {email} via Brevo HTTP API")
 
         try:
-            send_otp_email(to_email=email, otp_code=otp_obj.otp_code, purpose='REGISTER', user_name=name)
+            send_brevo_otp_email(to_email=email, otp_code=otp_obj.otp_code, purpose='REGISTER', user_name=name)
         except Exception as e:
             err_msg = str(e)
-            print(f"[SiteShield OTP Error] Could not send email via SMTP: {err_msg}", flush=True)
+            logger.error(f"[SiteShield OTP Error] Failed to send verification email to {email}: {err_msg}")
             return Response({
-                'detail': f'Failed to send verification email: {err_msg}. Note: Render Free Tier blocks outbound SMTP; check Render logs for your OTP code or configure a third-party email provider.'
+                'detail': f'Failed to send verification email: {err_msg}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({

@@ -220,3 +220,10 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'SiteShield 24 Monitor <nor
 SERVER_EMAIL = os.getenv('SERVER_EMAIL', EMAIL_HOST_USER)
 EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', 5))  # Prevents Gunicorn worker timeouts on blocked SMTP ports
 
+# Brevo (Sendinblue) Transactional Email HTTP API (HTTPS - port 443)
+BREVO_API_KEY = os.getenv('BREVO_API_KEY', '').strip()
+BREVO_SENDER_EMAIL = os.getenv('BREVO_SENDER_EMAIL', '').strip()
+BREVO_SENDER_NAME = os.getenv('BREVO_SENDER_NAME', 'SiteShield').strip()
+BREVO_API_URL = os.getenv('BREVO_API_URL', 'https://api.brevo.com/v3/smtp/email').strip()
+BREVO_TIMEOUT = int(os.getenv('BREVO_TIMEOUT', 10))
+
